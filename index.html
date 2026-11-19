@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="id" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kamus Arab–Indonesia & Analisis Nahwu–Sharaf</title>
+
+  <!-- Font Arab klasik & jelas (Amiri & Noto Naskh Arabic) + Font antarmuka Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS untuk tata letak responsif mobile-first -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            arabic: ['Amiri', 'Noto Naskh Arabic', 'serif'],
+            naskh: ['Noto Naskh Arabic', 'Amiri', 'serif'],
+          },
+          colors: {
+            emerald: {
+              950: '#042f2e',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Gaya kustom (setara style.css) untuk teks Arab RTL, ukuran font dinamis, dan tampilan cetak -->
+  <style id="custom-style">
+    :root {
+      --arabic-font-size: 2rem;
+      --arabic-line-height: 2.15;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .arabic-text {
+      font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+      direction: rtl;
+      unicode-bidi: isolate;
+      font-size: var(--arabic-font-size);
+      line-height: var(--arabic-line-height);
+    }
+
+    .arabic-sm {
+      font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+      direction: rtl;
+      unicode-bidi: isolate;
+      font-size: calc(var(--arabic-font-size) * 0.68);
+      line-height: 1.9;
+    }
+
+    .arabic-input {
+      font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+      direction: rtl;
+      unicode-bidi: isolate;
+      font-size: 1.65rem;
+      line-height: 1.8;
+    }
+
+    /* Scrollbar halus untuk tabel lebar di layar kecil */
+    .table-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .table-scroll::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.35);
+      border-radius: 9999px;
+    }
+
+    /* Animasi accordion halus */
+    .accordion-content {
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Tampilan cetak rapi */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .print-break-inside-avoid {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-stone-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+  <!-- Header Navigasi Utama -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-stone-200 dark:border-slate-800 no-print">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-emerald-700 text-amber-100 flex items-center justify-center font-arabic text-2xl shadow-sm shrink-0">
+          ع
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
+            Kamus Arab–Indonesia
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 truncate">
+            Analisis Nahwu, Sharaf, Tashrif &amp; I'rab
+          </p>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Header: Pengaturan API, Ukuran Font, Mode Gelap/Terang -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button
+          id="btn-toggle-settings"
+          type="button"
+          class="px-3 py-2 rounded-xl text-xs sm:text-sm font-medium bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5"
+          aria-expanded="false"
+          aria-controls="settings-panel"
+        >
+          <span>⚙️</span>
+          <span class="hidden sm:inline">API &amp; Tampilan</span>
+          <span id="api-status-dot" class="w-2 h-2 rounded-full bg-amber-500" title="Status API Key"></span>
+        </button>
+
+        <button
+          id="btn-theme-toggle"
+          type="button"
+          class="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition"
+          title="Ganti Mode Terang / Gelap"
+          aria-label="Ganti Mode Terang / Gelap"
+        >
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel Pengaturan API Key & Ukuran Huruf Arab (Bisa dibuka/tutup) -->
+    <div id="settings-panel" class="hidden border-t border-stone-200 dark:border-slate-800 bg-stone-50 dark:bg-slate-900/80">
+      <div class="max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Pengaturan Gemini API Key -->
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-stone-200 dark:border-slate-800 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label for="api-key-input" class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+              Gemini API Key (untuk Analisis Lengkap)
+            </label>
+            <span id="api-key-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              Mode Kamus Lokal
+            </span>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input
+              id="api-key-input"
+              type="password"
+              placeholder="Tempel Gemini API Key di sini..."
+              class="flex-1 px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600"
+            />
+            <button
+              id="btn-save-api-key"
+              type="button"
+              class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium transition shrink-0"
+            >
+              Simpan Key
+            </button>
+            <button
+              id="btn-clear-api-key"
+              type="button"
+              class="px-3 py-2.5 rounded-xl bg-stone-200 hover:bg-stone-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium transition shrink-0"
+            >
+              Hapus
+            </button>
+          </div>
+
+          <p class="text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded-xl p-2.5 leading-relaxed">
+            <strong>Peringatan Keamanan:</strong> API Key disimpan hanya di <code class="font-mono">localStorage</code> browser perangkat Anda sendiri dan tidak pernah ditulis ke kode sumber atau repository GitHub. Hindari menyimpan API Key pada komputer umum/warnet. Tanpa API Key, kamus lokal (~100 kata dasar) tetap dapat digunakan.
+          </p>
+        </div>
+
+        <!-- Pengaturan Ukuran Huruf Arab & Cache -->
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-stone-200 dark:border-slate-800 flex flex-col justify-between gap-3">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="font-size-range" class="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                Ukuran Font Arab
+              </label>
+              <span id="font-size-value" class="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                Sedang (32px)
+              </span>
+            </div>
+            <input
+              id="font-size-range"
+              type="range"
+              min="24"
+              max="48"
+              step="2"
+              value="32"
+              class="w-full accent-emerald-700 cursor-pointer"
+            />
+            <p class="arabic-text text-center mt-2 text-emerald-900 dark:text-emerald-200 bg-stone-50 dark:bg-slate-950 rounded-xl py-2 border border-stone-200 dark:border-slate-800">
+              بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+            </p>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-stone-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+            <span id="cache-stats-text">Cache lokal: 0 entri</span>
+            <button
+              id="btn-clear-cache"
+              type="button"
+              class="text-rose-600 dark:text-rose-400 hover:underline font-medium"
+            >
+              Bersihkan Cache Analisis
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Konten Utama -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-5 space-y-6">
+    <!-- Kotak Pencarian Utama -->
+    <section class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-sm p-4 sm:p-6 space-y-4 no-print">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <label for="search-input" class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Masukkan kata/kalimat Arab (berharakat atau gundul) atau kata Indonesia/Latin:
+        </label>
+        <div class="flex items-center gap-2">
+          <button
+            id="btn-toggle-keyboard"
+            type="button"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium bg-stone-100 hover:bg-stone-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5"
+            aria-expanded="false"
+            aria-controls="virtual-keyboard"
+          >
+            <span>⌨️</span>
+            <span>Keyboard Arab</span>
+          </button>
+          <button
+            id="btn-clear-input"
+            type="button"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition"
+          >
+            Bersihkan
+          </button>
+        </div>
+      </div>
+
+      <!-- Input & Tombol Cari -->
+      <form id="search-form" class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <input
+            id="search-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Contoh: كتب ، يذهب ، كتاب ، ذهب الطالب إلى المدرسة ، ilmu ..."
+            class="w-full px-4 py-3.5 pr-12 rounded-2xl border border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition"
+          />
+          <span class="hidden sm:inline-block absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+            ID / AR
+          </span>
+        </div>
+
+        <button
+          id="btn-search"
+          type="submit"
+          class="px-6 py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-semibold text-sm sm:text-base shadow-sm transition flex items-center justify-center gap-2 shrink-0"
+        >
+          <span>🔍</span>
+          <span>Analisis</span>
+        </button>
+      </form>
+
+      <!-- Contoh Cepat untuk Memudahkan Pengujian -->
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="text-slate-500 dark:text-slate-400 font-medium">Contoh cepat:</span>
+        <button type="button" data-sample="كتب" class="sample-chip px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-800 dark:hover:bg-emerald-950 dark:text-slate-200 transition arabic-sm">
+          كَتَبَ
+        </button>
+        <button type="button" data-sample="كتاب" class="sample-chip px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-800 dark:hover:bg-emerald-950 dark:text-slate-200 transition arabic-sm">
+          كِتَابٌ
+        </button>
+        <button type="button" data-sample="ذهب الطالب إلى المدرسة" class="sample-chip px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-800 dark:hover:bg-emerald-950 dark:text-slate-200 transition arabic-sm">
+          ذَهَبَ الطَّالِبُ إِلَى الْمَدْرَسَةِ
+        </button>
+        <button type="button" data-sample="ilmu" class="sample-chip px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-800 dark:hover:bg-emerald-950 dark:text-slate-200 transition">
+          ilmu (ID)
+        </button>
+        <button type="button" data-sample="guru" class="sample-chip px-3 py-1.5 rounded-full bg-stone-100 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-slate-800 dark:hover:bg-emerald-950 dark:text-slate-200 transition">
+          guru (ID)
+        </button>
+      </div>
+
+      <!-- Keyboard Arab Virtual & Harakat -->
+      <div id="virtual-keyboard" class="hidden pt-3 border-t border-stone-200 dark:border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>Klik huruf atau harakat untuk menyisipkan ke kolom input:</span>
+          <div class="flex items-center gap-1.5">
+            <button id="vk-space" type="button" class="px-3 py-1 rounded-lg bg-stone-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+              Spasi
+            </button>
+            <button id="vk-backspace" type="button" class="px-3 py-1 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-medium">
+              ⌫ Hapus
+            </button>
+          </div>
+        </div>
+
+        <!-- Baris Harakat -->
+        <div id="vk-harakat-row" class="flex flex-wrap justify-center gap-1.5 bg-amber-50/70 dark:bg-amber-950/20 p-2 rounded-2xl border border-amber-200/70 dark:border-amber-800/40"></div>
+
+        <!-- Tombol Huruf Hijaiyah -->
+        <div id="vk-letters-grid" class="grid grid-cols-7 sm:grid-cols-10 md:grid-cols-14 gap-1.5"></div>
+      </div>
+    </section>
+
+    <!-- Area Notifikasi / Pesan Error Ramah -->
+    <div id="message-banner" class="hidden rounded-2xl p-4 border text-sm no-print" role="alert"></div>
+
+    <!-- Indikator Loading -->
+    <div id="loading-indicator" class="hidden bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-8 text-center space-y-3">
+      <div class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-700 rounded-full animate-spin mx-auto"></div>
+      <p class="font-medium text-slate-700 dark:text-slate-200" id="loading-text">
+        Menganalisis kaidah nahwu dan sharaf...
+      </p>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Memeriksa kamus lokal, cache, dan struktur kata/kalimat.
+      </p>
+    </div>
+
+    <!-- Hasil Analisis Utama -->
+    <section id="result-container" class="hidden space-y-6">
+      <!-- Toolbar Hasil: Sumber Data, Favorit, Dengarkan Audio, Salin, Cetak -->
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 no-print">
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="source-badge" class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+            Kamus Lokal
+          </span>
+          <span id="mode-badge" class="px-3 py-1 rounded-full text-xs font-medium bg-stone-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            Satu Kata
+          </span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            id="btn-speak"
+            type="button"
+            class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 transition flex items-center gap-1.5"
+            title="Dengarkan pengucapan bahasa Arab (ar-SA)"
+          >
+            <span>🔊</span>
+            <span>Dengarkan</span>
+          </button>
+
+          <button
+            id="btn-favorite"
+            type="button"
+            class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 transition flex items-center gap-1.5"
+          >
+            <span id="favorite-icon">☆</span>
+            <span id="favorite-label">Favorit</span>
+          </button>
+
+          <button
+            id="btn-copy"
+            type="button"
+            class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-stone-100 hover:bg-stone-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5"
+          >
+            <span>📋</span>
+            <span id="copy-label">Salin</span>
+          </button>
+
+          <button
+            id="btn-print"
+            type="button"
+            class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-stone-100 hover:bg-stone-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center gap-1.5"
+          >
+            <span>🖨️</span>
+            <span>Cetak</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tempat Render Hasil Satu Kata -->
+      <div id="word-result" class="hidden space-y-6"></div>
+
+      <!-- Tempat Render Hasil Satu Kalimat -->
+      <div id="sentence-result" class="hidden space-y-6"></div>
+    </section>
+
+    <!-- Bagian Riwayat Pencarian & Favorit -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-5 no-print">
+      <!-- Favorit -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <span>⭐</span>
+            <span>Kata &amp; Kalimat Favorit</span>
+          </h2>
+          <button
+            id="btn-clear-favorites"
+            type="button"
+            class="text-xs text-rose-600 dark:text-rose-400 hover:underline font-medium"
+          >
+            Hapus Semua
+          </button>
+        </div>
+        <div id="favorites-list" class="flex flex-wrap gap-2 min-h-[2.5rem]">
+          <p class="text-xs text-slate-400">Belum ada favorit tersimpan.</p>
+        </div>
+      </div>
+
+      <!-- Riwayat Pencarian -->
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-2">
+            <span>🕘</span>
+            <span>Riwayat Pencarian</span>
+          </h2>
+          <button
+            id="btn-clear-history"
+            type="button"
+            class="text-xs text-rose-600 dark:text-rose-400 hover:underline font-medium"
+          >
+            Hapus Riwayat
+          </button>
+        </div>
+        <div id="history-list" class="flex flex-wrap gap-2 min-h-[2.5rem]">
+          <p class="text-xs text-slate-400">Belum ada riwayat pencarian.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Wajib -->
+  <footer class="border-t border-stone-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-10 py-6 px-4 text-center text-xs text-slate-600 dark:text-slate-400">
+    <div class="max-w-4xl mx-auto space-y-2">
+      <p class="font-medium text-slate-700 dark:text-slate-300">
+        Analisis dihasilkan AI dan bisa keliru; periksa kembali dengan kitab nahwu-sharaf (misal Alfiyah, Jurumiyah, Al-Amtsilah at-Tashrifiyyah).
+      </p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-500">
+        Kamus Arab–Indonesia Statis (HTML/CSS/JS) • Siap dipublikasikan di GitHub Pages
+      </p>
+    </div>
+  </footer>
+
+  <!-- =====================================================================
+       BAGIAN DATA KAMUS LOKAL (setara data/kamus.json - ~100 kata umum)
+       ===================================================================== -->
+  <script id="local-dictionary-json" type="application/json">
+  [
+    {"ar":"كِتَابٌ","gundul":"كتاب","id":"buku, kitab","latin":"kitabun","jenis":"Isim","subjenis":"Isim Jamid / Mashdar (makna kitab)","jidzr":"ك - ت - ب","wazan":"فِعَالٌ","bina":"Shahih Salim","contoh_ar":"قَرَأْتُ كِتَابًا مُفِيدًا","contoh_id":"Saya membaca sebuah buku yang bermanfaat","seakar":["كَتَبَ","كَاتِبٌ","مَكْتَبٌ","مَكْتَبَةٌ","مَكْتُوبٌ"]},
+    {"ar":"كَتَبَ","gundul":"كتب","id":"menulis, menetapkan","latin":"kataba","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ك - ت - ب","wazan":"فَعَلَ - يَفْعُلُ (Tsulatsi Mujarrad Bab 1)","bina":"Shahih Salim","contoh_ar":"كَتَبَ الطَّالِبُ الدَّرْسَ","contoh_id":"Siswa itu menulis pelajaran","seakar":["كِتَابٌ","كَاتِبٌ","مَكْتَبٌ","مَكْتُوبٌ","كِتَابَةٌ"]},
+    {"ar":"قَلَمٌ","gundul":"قلم","id":"pena, pulpen","latin":"qalamun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ق - ل - م","wazan":"فَعَلٌ","bina":"Shahih Salim","contoh_ar":"أَكْتُبُ بِالْقَلَمِ","contoh_id":"Saya menulis dengan pena","seakar":["قَلَّمَ","تَقْلِيمٌ","مِقْلَمَةٌ"]},
+    {"ar":"عِلْمٌ","gundul":"علم","id":"ilmu, pengetahuan","latin":"ilmun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ع - ل - م","wazan":"فِعْلٌ","bina":"Shahih Salim","contoh_ar":"طَلَبُ الْعِلْمِ فَرِيضَةٌ","contoh_id":"Menuntut ilmu adalah kewajiban","seakar":["عَلِمَ","عَالِمٌ","مَعْلُومٌ","تَعَلَّمَ","مُعَلِّمٌ"]},
+    {"ar":"عَلِمَ","gundul":"علم","id":"mengetahui, mengerti","latin":"alima","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ع - ل - م","wazan":"فَعِلَ - يَعْلَمُ (Tsulatsi Mujarrad Bab 4)","bina":"Shahih Salim","contoh_ar":"عَلِمَ اللَّهُ مَا فِي الصُّدُورِ","contoh_id":"Allah mengetahui apa yang ada di dalam dada","seakar":["عِلْمٌ","عَالِمٌ","مَعْلُومٌ","أَعْلَمَ"]},
+    {"ar":"مُعَلِّمٌ","gundul":"معلم","id":"guru, pengajar","latin":"mu'allimun","jenis":"Isim","subjenis":"Isim Fa'il (dari fi'il mazid عَلَّمَ)","jidzr":"ع - ل - م","wazan":"مُفَعِّلٌ","bina":"Shahih Salim","contoh_ar":"جَاءَ الْمُعَلِّمُ إِلَى الْفَصْلِ","contoh_id":"Guru itu datang ke kelas","seakar":["عَلَّمَ","عِلْمٌ","تَعْلِيمٌ","مُتَعَلِّمٌ"]},
+    {"ar":"طَالِبٌ","gundul":"طالب","id":"pelajar, mahasiswa, penuntut","latin":"thalibun","jenis":"Isim","subjenis":"Isim Fa'il","jidzr":"ط - ل - ب","wazan":"فَاعِلٌ","bina":"Shahih Salim","contoh_ar":"يَجْتَهِدُ الطَّالِبُ فِي الْمُذَاكَرَةِ","contoh_id":"Pelajar itu bersungguh-sungguh dalam belajar","seakar":["طَلَبَ","مَطْلُوبٌ","طَلَبٌ","مُطَالَبَةٌ"]},
+    {"ar":"مَدْرَسَةٌ","gundul":"مدرسة","id":"sekolah, madrasah","latin":"madrasatun","jenis":"Isim","subjenis":"Isim Makan (berakhiran ta marbutah)","jidzr":"د - ر - س","wazan":"مَفْعَلَةٌ","bina":"Shahih Salim","contoh_ar":"ذَهَبْتُ إِلَى الْمَدْرَسَةِ صَبَاحًا","contoh_id":"Saya pergi ke sekolah pada pagi hari","seakar":["دَرَسَ","دَرْسٌ","مُدَرِّسٌ","دِرَاسَةٌ"]},
+    {"ar":"بَيْتٌ","gundul":"بيت","id":"rumah, tempat tinggal","latin":"baytun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ب - ي - ت","wazan":"فَعْلٌ","bina":"Ajwaf Ya'i","contoh_ar":"بَيْتِي قَرِيبٌ مِنَ الْمَسْجِدِ","contoh_id":"Rumahku dekat dari masjid","seakar":["بَاتَ","مَبِيتٌ","بُيُوتٌ"]},
+    {"ar":"مَسْجِدٌ","gundul":"مسجد","id":"masjid, tempat sujud","latin":"masjidun","jenis":"Isim","subjenis":"Isim Makan","jidzr":"س - ج - د","wazan":"مَفْعِلٌ","bina":"Shahih Salim","contoh_ar":"صَلَّيْتُ فِي الْمَسْجِدِ","contoh_id":"Saya shalat di masjid","seakar":["سَجَدَ","سُجُودٌ","سَاجِدٌ","مَسَاجِدُ"]},
+    {"ar":"ذَهَبَ","gundul":"ذهب","id":"pergi, berangkat","latin":"dzahaba","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ذ - ه - ب","wazan":"فَعَلَ - يَذْهَبُ (Tsulatsi Mujarrad Bab 3)","bina":"Shahih Salim","contoh_ar":"ذَهَبَ أَخِي إِلَى السُّوقِ","contoh_id":"Saudara laki-lakiku pergi ke pasar","seakar":["ذَهَابٌ","ذَاهِبٌ","مَذْهَبٌ"]},
+    {"ar":"جَاءَ","gundul":"جاء","id":"datang, tiba","latin":"ja'a","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ج - ي - أ","wazan":"فَعَلَ - يَجِيءُ (Tsulatsi Mujarrad Bab 2)","bina":"Ajwaf Ya'i Mahmuz Lam","contoh_ar":"جَاءَ الضَّيْفُ مَسَاءً","contoh_id":"Tamu itu datang pada sore hari","seakar":["مَجِيءٌ","جَائِئٌ"]},
+    {"ar":"قَرَأَ","gundul":"قرا","id":"membaca","latin":"qara'a","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ق - ر - أ","wazan":"فَعَلَ - يَقْرَأُ (Tsulatsi Mujarrad Bab 3)","bina":"Mahmuz Lam","contoh_ar":"يَقْرَأُ الْوَلَدُ الْقُرْآنَ","contoh_id":"Anak laki-laki itu membaca Al-Qur'an","seakar":["قِرَاءَةٌ","قَارِئٌ","مَقْرُوءٌ"]},
+    {"ar":"فَتَحَ","gundul":"فتح","id":"membuka, menaklukkan","latin":"fataha","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ف - ت - ح","wazan":"فَعَلَ - يَفْتَحُ (Tsulatsi Mujarrad Bab 3)","bina":"Shahih Salim","contoh_ar":"فَتَحَ الْحَارِسُ الْبَابَ","contoh_id":"Penjaga itu membuka pintu","seakar":["فَتْحٌ","مِفْتَاحٌ","فَاتِحٌ","مَفْتُوحٌ"]},
+    {"ar":"نَصَرَ","gundul":"نصر","id":"menolong, memenangkan","latin":"nashara","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ن - ص - ر","wazan":"فَعَلَ - يَنْصُرُ (Tsulatsi Mujarrad Bab 1)","bina":"Shahih Salim","contoh_ar":"يَنْصُرُ اللَّهُ الْمُؤْمِنِينَ","contoh_id":"Allah menolong orang-orang yang beriman","seakar":["نَصْرٌ","نَاصِرٌ","مَنْصُورٌ","انْتَصَرَ"]},
+    {"ar":"رَجُلٌ","gundul":"رجل","id":"laki-laki dewasa, pria","latin":"rajulun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ر - ج - ل","wazan":"فَعُلٌ","bina":"Shahih Salim","contoh_ar":"مَرَرْتُ بِرَجُلٍ كَرِيمٍ","contoh_id":"Saya berpapasan dengan laki-laki yang mulia","seakar":["رِجَالٌ","رُجُولَةٌ","تَرَجَّلَ"]},
+    {"ar":"امْرَأَةٌ","gundul":"امراة","id":"wanita, perempuan","latin":"imra'atun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"م - ر - أ","wazan":"فَعْلَةٌ (dengan hamzah washal)","bina":"Mahmuz Lam","contoh_ar":"جَاءَتِ الْمَرْأَةُ إِلَى الدَّارِ","contoh_id":"Wanita itu datang ke rumah","seakar":["نِسَاءٌ","مُرُوءَةٌ"]},
+    {"ar":"وَلَدٌ","gundul":"ولد","id":"anak, putra","latin":"waladun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"و - ل - د","wazan":"فَعَلٌ","bina":"Mithal Wawi","contoh_ar":"الْوَلَدُ يَلْعَبُ فِي الْحَدِيقَةِ","contoh_id":"Anak itu bermain di taman","seakar":["وَلَدَ","وَالِدٌ","مَوْلُودٌ","وِلَادَةٌ","أَوْلَادٌ"]},
+    {"ar":"بِنْتٌ","gundul":"بنت","id":"anak perempuan, putri","latin":"bintun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"ب - ن - ي","wazan":"فِعْلٌ (asalnya بِنْيَةٌ)","bina":"Naqish Ya'i","contoh_ar":"الْبِنْتُ تَقْرَأُ الْقِصَّةَ","contoh_id":"Anak perempuan itu membaca cerita","seakar":["بَنَاتٌ","بِنَاءٌ","بَانٍ"]},
+    {"ar":"أَبٌ","gundul":"اب","id":"ayah, bapak","latin":"abun","jenis":"Isim","subjenis":"Isim Jamid (bagian dari Al-Asma' al-Khamsah)","jidzr":"أ - ب - و","wazan":"فَعٌ (asalnya أَبَوٌ)","bina":"Mahmuz Fa' Naqish Wawi","contoh_ar":"أَبِي يَعْمَلُ فِي الْمَكْتَبِ","contoh_id":"Ayahku bekerja di kantor","seakar":["آبَاءٌ","أُبُوَّةٌ"]},
+    {"ar":"أُمٌّ","gundul":"ام","id":"ibu","latin":"ummun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"أ - م - م","wazan":"فُعْلٌ","bina":"Mahmuz Fa' Mudha'af","contoh_ar":"أُمِّي تُعِدُّ الطَّعَامَ","contoh_id":"Ibuku menyiapkan makanan","seakar":["أُمَّهَاتٌ","أُمَّةٌ","إِمَامٌ"]},
+    {"ar":"أَخٌ","gundul":"اخ","id":"saudara laki-laki","latin":"akhun","jenis":"Isim","subjenis":"Isim Jamid (Al-Asma' al-Khamsah)","jidzr":"أ - خ - و","wazan":"فَعٌ (asalnya أَخَوٌ)","bina":"Mahmuz Fa' Naqish Wawi","contoh_ar":"لِي أَخٌ كَبِيرٌ","contoh_id":"Saya memiliki seorang saudara laki-laki yang besar","seakar":["إِخْوَةٌ","إِخْوَانٌ","أُخُوَّةٌ"]},
+    {"ar":"أُخْتٌ","gundul":"اخت","id":"saudara perempuan","latin":"ukhtun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"أ - خ - و","wazan":"فُعْلٌ","bina":"Mahmuz Fa' Naqish Wawi","contoh_ar":"أُخْتِي تَدْرُسُ الطِّبَّ","contoh_id":"Saudara perempuanku mempelajari kedokteran","seakar":["أَخَوَاتٌ","أُخُوَّةٌ"]},
+    {"ar":"يَوْمٌ","gundul":"يوم","id":"hari, siang","latin":"yawmun","jenis":"Isim","subjenis":"Isim Zaman / Isim Jamid","jidzr":"ي - و - م","wazan":"فَعْلٌ","bina":"Ajwaf Wawi","contoh_ar":"الْيَوْمُ جَمِيلٌ وَمُشْمِسٌ","contoh_id":"Hari ini indah dan cerah","seakar":["أَيَّامٌ","يَوْمِيٌّ"]},
+    {"ar":"لَيْلٌ","gundul":"ليل","id":"malam, waktu malam","latin":"laylun","jenis":"Isim","subjenis":"Isim Zaman / Isim Jamid","jidzr":"ل - ي - ل","wazan":"فَعْلٌ","bina":"Ajwaf Ya'i","contoh_ar":"سَافَرْنَا فِي اللَّيْلِ","contoh_id":"Kami bepergian pada malam hari","seakar":["لَيْلَةٌ","لَيَالٍ","لَيْلِيٌّ"]},
+    {"ar":"شَمْسٌ","gundul":"شمس","id":"matahari","latin":"syamsun","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"ش - م - س","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"تَشْرُقُ الشَّمْسُ مِنَ الْمَشْرِقِ","contoh_id":"Matahari terbit dari arah timur","seakar":["شُمُوسٌ","مُشْمِسٌ"]},
+    {"ar":"قَمَرٌ","gundul":"قمر","id":"bulan","latin":"qamarun","jenis":"Isim","subjenis":"Isim Jamid Mudzakkar","jidzr":"ق - م - ر","wazan":"فَعَلٌ","bina":"Shahih Salim","contoh_ar":"ظَهَرَ الْقَمَرُ فِي السَّمَاءِ","contoh_id":"Bulan tampak di langit","seakar":["أَقْمَارٌ","قَمَرِيٌّ"]},
+    {"ar":"سَمَاءٌ","gundul":"سماء","id":"langit","latin":"sama'un","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"س - م - و","wazan":"فَعَالٌ","bina":"Naqish Wawi Mahmuz Lam","contoh_ar":"الْمَطَرُ يَنْزِلُ مِنَ السَّمَاءِ","contoh_id":"Hujan turun dari langit","seakar":["سَمَاوَاتٌ","سَمَاوِيٌّ","سُمُوٌّ"]},
+    {"ar":"أَرْضٌ","gundul":"ارض","id":"bumi, tanah, negeri","latin":"ardhun","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"أ - ر - ض","wazan":"فَعْلٌ","bina":"Mahmuz Fa'","contoh_ar":"اللَّهُ رَبُّ السَّمَاوَاتِ وَالْأَرْضِ","contoh_id":"Allah adalah Rabb langit dan bumi","seakar":["أَرَاضٍ","أَرْضِيٌّ"]},
+    {"ar":"مَاءٌ","gundul":"ماء","id":"air","latin":"ma'un","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"م - و - ه","wazan":"فَعْلٌ (asalnya مَوْهٌ)","bina":"Ajwaf Wawi","contoh_ar":"الْمَاءُ حَيَاةُ كُلِّ شَيْءٍ","contoh_id":"Air adalah kehidupan segala sesuatu","seakar":["مِيَاهٌ","مَائِيٌّ"]},
+    {"ar":"نَارٌ","gundul":"نار","id":"api, neraka","latin":"narun","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"ن - و - ر","wazan":"فَعْلٌ (asalnya نَوَرٌ)","bina":"Ajwaf Wawi","contoh_ar":"النَّارُ حَارَّةٌ","contoh_id":"Api itu panas","seakar":["نِيرَانٌ","نَارِيٌّ","نُورٌ"]},
+    {"ar":"نُورٌ","gundul":"نور","id":"cahaya, sinar","latin":"nurun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid","jidzr":"ن - و - ر","wazan":"فُعْلٌ","bina":"Ajwaf Wawi","contoh_ar":"الْعِلْمُ نُورٌ","contoh_id":"Ilmu adalah cahaya","seakar":["أَنْوَارٌ","مُنِيرٌ","اسْتَنَارَ"]},
+    {"ar":"طَعَامٌ","gundul":"طعام","id":"makanan","latin":"tha'amun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid","jidzr":"ط - ع - م","wazan":"فَعَالٌ","bina":"Shahih Salim","contoh_ar":"أَكَلْتُ طَعَامًا لَذِيذًا","contoh_id":"Saya memakan makanan yang lezat","seakar":["طَعِمَ","أَطْعِمَةٌ","مَطْعَمٌ"]},
+    {"ar":"شَرَابٌ","gundul":"شراب","id":"minuman","latin":"syarabun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid","jidzr":"ش - ر - ب","wazan":"فَعَالٌ","bina":"Shahih Salim","contoh_ar":"هَذَا شَرَابٌ بَارِدٌ","contoh_id":"Ini minuman yang dingin","seakar":["شَرِبَ","مَشْرُوبٌ","مَشْرَبٌ"]},
+    {"ar":"أَكَلَ","gundul":"اكل","id":"makan","latin":"akala","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"أ - ك - ل","wazan":"فَعَلَ - يَأْكُلُ (Tsulatsi Mujarrad Bab 1)","bina":"Mahmuz Fa'","contoh_ar":"أَكَلَ الطِّفْلُ التُّفَّاحَةَ","contoh_id":"Anak kecil itu memakan apel","seakar":["أَكْلٌ","آكِلٌ","مَأْكُولٌ","مَأْكَلٌ"]},
+    {"ar":"شَرِبَ","gundul":"شرب","id":"minum","latin":"syariba","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ش - ر - ب","wazan":"فَعِلَ - يَشْرَبُ (Tsulatsi Mujarrad Bab 4)","bina":"Shahih Salim","contoh_ar":"شَرِبْتُ كُوبًا مِنَ الْمَاءِ","contoh_id":"Saya meminum segelas air","seakar":["شُرْبٌ","شَارِبٌ","مَشْرُوبٌ"]},
+    {"ar":"عَمِلَ","gundul":"عمل","id":"bekerja, beramal, melakukan","latin":"amila","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ع - م - ل","wazan":"فَعِلَ - يَعْمَلُ (Tsulatsi Mujarrad Bab 4)","bina":"Shahih Salim","contoh_ar":"عَمِلَ الْمُهَنْدِسُ بِجِدٍّ","contoh_id":"Insinyur itu bekerja dengan giat","seakar":["عَمَلٌ","عَامِلٌ","مَعْمُولٌ","أَعْمَالٌ"]},
+    {"ar":"سَمِعَ","gundul":"سمع","id":"mendengar","latin":"sami'a","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"س - م - ع","wazan":"فَعِلَ - يَسْمَعُ (Tsulatsi Mujarrad Bab 4)","bina":"Shahih Salim","contoh_ar":"سَمِعْتُ الْخَبَرَ الصَّادِقَ","contoh_id":"Saya mendengar kabar yang benar","seakar":["سَمْعٌ","سَامِعٌ","مَسْمُوعٌ","اسْتَمَعَ"]},
+    {"ar":"رَأَى","gundul":"راى","id":"melihat, berpendapat","latin":"ra'a","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ر - أ - ي","wazan":"فَعَلَ - يَرَى (Tsulatsi Mujarrad Bab 3)","bina":"Mahmuz Fa' Lafif Maqrun","contoh_ar":"رَأَيْتُ الْهِلَالَ فِي اللَّيْلِ","contoh_id":"Saya melihat hilal pada malam hari","seakar":["رُؤْيَةٌ","رَاءٍ","مَرْئِيٌّ"]},
+    {"ar":"قَالَ","gundul":"قال","id":"berkata, mengatakan","latin":"qala","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ق - و - ل","wazan":"فَعَلَ - يَقُولُ (Tsulatsi Mujarrad Bab 1)","bina":"Ajwaf Wawi","contoh_ar":"قَالَ الْأُسْتَاذُ كَلِمَةً حَكِيمَةً","contoh_id":"Ustadz itu mengatakan kata yang bijak","seakar":["قَوْلٌ","قَائِلٌ","مَقُولٌ","أَقْوَالٌ"]},
+    {"ar":"كَانَ","gundul":"كان","id":"adalah, ada, pernah terjadi","latin":"kana","jenis":"Fi'il","subjenis":"Fi'il Madhi Naqish (saudara كَانَ)","jidzr":"ك - و - ن","wazan":"فَعَلَ - يَكُونُ (Tsulatsi Mujarrad Bab 1)","bina":"Ajwaf Wawi","contoh_ar":"كَانَ الْجَوُّ جَمِيلًا","contoh_id":"Cuaca itu indah","seakar":["كَوْنٌ","كَائِنٌ","مَكَانٌ","تَكْوِينٌ"]},
+    {"ar":"مِنْ","gundul":"من","id":"dari, sebagian dari","latin":"min","jenis":"Harf","subjenis":"Harf Jar","jidzr":"Tidak ada (Harf)","wazan":"Tidak ada (Mabni atas sukun)","bina":"Harf","contoh_ar":"خَرَجْتُ مِنَ الْبَيْتِ","contoh_id":"Saya keluar dari rumah","seakar":[]},
+    {"ar":"إِلَى","gundul":"الى","id":"ke, kepada, sampai","latin":"ila","jenis":"Harf","subjenis":"Harf Jar","jidzr":"Tidak ada (Harf)","wazan":"Tidak ada (Mabni atas sukun)","bina":"Harf","contoh_ar":"سَافَرْتُ إِلَى مَكَّةَ","contoh_id":"Saya bepergian ke Makkah","seakar":[]},
+    {"ar":"فِي","gundul":"في","id":"di dalam, pada, mengenai","latin":"fi","jenis":"Harf","subjenis":"Harf Jar","jidzr":"Tidak ada (Harf)","wazan":"Tidak ada (Mabni atas sukun)","bina":"Harf","contoh_ar":"الْكِتَابُ فِي الْحَقِيبَةِ","contoh_id":"Buku itu ada di dalam tas","seakar":[]},
+    {"ar":"عَلَى","gundul":"على","id":"di atas, atas, kewajiban atas","latin":"'ala","jenis":"Harf","subjenis":"Harf Jar","jidzr":"Tidak ada (Harf)","wazan":"Tidak ada (Mabni atas sukun)","bina":"Harf","contoh_ar":"الْقَلَمُ عَلَى الْمَكْتَبِ","contoh_id":"Pena itu di atas meja","seakar":[]},
+    {"ar":"كَبِيرٌ","gundul":"كبير","id":"besar, agung, dewasa","latin":"kabirun","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Shifat","jidzr":"ك - ب - ر","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"هَذَا بَيْتٌ كَبِيرٌ","contoh_id":"Ini adalah rumah yang besar","seakar":["كَبُرَ","كِبَارٌ","أَكْبَرُ","تَكْبِيرٌ"]},
+    {"ar":"صَغِيرٌ","gundul":"صغير","id":"kecil, muda","latin":"shaghirun","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Shifat","jidzr":"ص - غ - ر","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"طِفْلٌ صَغِيرٌ يَبْتَسِمُ","contoh_id":"Anak kecil itu tersenyum","seakar":["صَغُرَ","صِغَارٌ","أَصْغَرُ","تَصْغِيرٌ"]},
+    {"ar":"جَدِيدٌ","gundul":"جديد","id":"baru","latin":"jadidun","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Shifat","jidzr":"ج - د - د","wazan":"فَعِيلٌ","bina":"Mudha'af","contoh_ar":"اشْتَرَيْتُ ثَوْبًا جَدِيدًا","contoh_id":"Saya membeli baju baru","seakar":["جَدَّ","جُدُدٌ","تَجْدِيدٌ","جَدِيدَةٌ"]},
+    {"ar":"قَدِيمٌ","gundul":"قديم","id":"lama, kuno, terdahulu","latin":"qadimun","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Shifat","jidzr":"ق - د - م","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"هَذَا مَسْجِدٌ قَدِيمٌ","contoh_id":"Ini adalah masjid tua","seakar":["قَدُمَ","قُدَمَاءُ","تَقَدَّمَ","قِدَمٌ"]},
+    {"ar":"جَمِيلٌ","gundul":"جميل","id":"indah, bagus, tampan/cantik","latin":"jamilun","jenis":"Isim","subjenis":"Shifat Musyabbahah","jidzr":"ج - م - ل","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"الْخَطُّ الْعَرَبِيُّ جَمِيلٌ","contoh_id":"Kaligrafi/tulisan Arab itu indah","seakar":["جَمُلَ","جَمَالٌ","تَجْمِيلٌ","أَجْمَلُ"]},
+    {"ar":"سُوقٌ","gundul":"سوق","id":"pasar","latin":"suqun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"س - و - ق","wazan":"فَعْلٌ (asalnya سَوْقٌ)","bina":"Ajwaf Wawi","contoh_ar":"ذَهَبَتْ أُمِّي إِلَى السُّوقِ","contoh_id":"Ibuku pergi ke pasar","seakar":["أَسْوَاقٌ","سَاقَ","تَسَوُّقٌ"]},
+    {"ar":"مَدِينَةٌ","gundul":"مدينة","id":"kota","latin":"madinatun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"م - د - ن","wazan":"فَعِيلَةٌ","bina":"Shahih Salim","contoh_ar":"الْمَدِينَةُ الْمُنَوَّرَةُ","contoh_id":"Kota Madinah yang bercahaya","seakar":["مُدُنٌ","مَدَنِيٌّ","تَمَدُّنٌ"]},
+    {"ar":"بَلَدٌ","gundul":"بلد","id":"negeri, negara, kota","latin":"baladun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ب - ل - د","wazan":"فَعَلٌ","bina":"Shahih Salim","contoh_ar":"إِنْدُونِيسِيَا بَلَدٌ كَبِيرٌ","contoh_id":"Indonesia adalah negara yang besar","seakar":["بِلَادٌ","بُلْدَانٌ","بَلَدِيٌّ"]},
+    {"ar":"بَابٌ","gundul":"باب","id":"pintu, bab","latin":"babun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ب - و - ب","wazan":"فَعْلٌ (asalnya بَوْبٌ)","bina":"Ajwaf Wawi","contoh_ar":"افْتَحِ الْبَابَ مِنْ فَضْلِكَ","contoh_id":"Tolong buka pintunya","seakar":["أَبْوَابٌ","بَوَّابٌ"]},
+    {"ar":"نَافِذَةٌ","gundul":"نافذة","id":"jendela","latin":"nafidzatun","jenis":"Isim","subjenis":"Isim Fa'il Muannats","jidzr":"ن - ف - ذ","wazan":"فَاعِلَةٌ","bina":"Shahih Salim","contoh_ar":"فَتَحْتُ نَافِذَةَ الْغُرْفَةِ","contoh_id":"Saya membuka jendela kamar","seakar":["نَفَذَ","نَوَافِذُ","مَنْفَذٌ"]},
+    {"ar":"غُرْفَةٌ","gundul":"غرفة","id":"kamar, ruangan","latin":"ghurfatun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"غ - ر - ف","wazan":"فُعْلَةٌ","bina":"Shahih Salim","contoh_ar":"غُرْفَتِي نَظِيفَةٌ","contoh_id":"Kamarku bersih","seakar":["غُرَفٌ","اغْتَرَفَ","مِغْرَفَةٌ"]},
+    {"ar":"مَكْتَبٌ","gundul":"مكتب","id":"kantor, meja tulis","latin":"maktabun","jenis":"Isim","subjenis":"Isim Makan","jidzr":"ك - ت - ب","wazan":"مَفْعَلٌ","bina":"Shahih Salim","contoh_ar":"يَجْلِسُ الْمُدِيرُ فِي الْمَكْتَبِ","contoh_id":"Direktur itu duduk di kantor","seakar":["كَتَبَ","كِتَابٌ","مَكَاتِبُ"]},
+    {"ar":"مَكْتَبَةٌ","gundul":"مكتبة","id":"perpustakaan, toko buku","latin":"maktabatun","jenis":"Isim","subjenis":"Isim Makan Muannats","jidzr":"ك - ت - ب","wazan":"مَفْعَلَةٌ","bina":"Shahih Salim","contoh_ar":"أَذْهَبُ إِلَى الْمَكْتَبَةِ كُلَّ أُسْبُوعٍ","contoh_id":"Saya pergi ke perpustakaan setiap pekan","seakar":["كَتَبَ","كِتَابٌ","مَكْتَبَاتٌ"]},
+    {"ar":"جَامِعَةٌ","gundul":"جامعة","id":"universitas, perguruan tinggi","latin":"jami'atun","jenis":"Isim","subjenis":"Isim Fa'il Muannats / Isim Jamid","jidzr":"ج - م - ع","wazan":"فَاعِلَةٌ","bina":"Shahih Salim","contoh_ar":"يَدْرُسُ فِي الْجَامِعَةِ","contoh_id":"Dia kuliah di universitas","seakar":["جَمَعَ","جَمْعٌ","مَجْمَعٌ","جَامِعٌ"]},
+    {"ar":"سَيَّارَةٌ","gundul":"سيارة","id":"mobil","latin":"sayyaratun","jenis":"Isim","subjenis":"Shighah Mubalaghah Muannats","jidzr":"س - ي - ر","wazan":"فَعَّالَةٌ","bina":"Ajwaf Ya'i","contoh_ar":"رَكِبْتُ السَّيَّارَةَ","contoh_id":"Saya menaiki mobil","seakar":["سَارَ","سَيْرٌ","مَسَارٌ"]},
+    {"ar":"طَرِيقٌ","gundul":"طريق","id":"jalan, cara","latin":"thariqun","jenis":"Isim","subjenis":"Isim Jamid / Shifat Musyabbahah","jidzr":"ط - ر - ق","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"هَذَا طَرِيقٌ مُسْتَقِيمٌ","contoh_id":"Ini adalah jalan yang lurus","seakar":["طَرَقَ","طُرُقٌ","مِطْرَقَةٌ"]},
+    {"ar":"بَحْرٌ","gundul":"بحر","id":"laut, lautan","latin":"bahrun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ب - ح - ر","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"الْبَحْرُ وَاسِعٌ","contoh_id":"Laut itu luas","seakar":["بِحَارٌ","بَحْرِيٌّ","أَبْحُرٌ"]},
+    {"ar":"نَهْرٌ","gundul":"نهر","id":"sungai","latin":"nahrun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ن - ه - ر","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"يَجْرِي النَّهْرُ بِهُدُوءٍ","contoh_id":"Sungai itu mengalir dengan tenang","seakar":["أَنْهَارٌ","نَهْرِيٌّ"]},
+    {"ar":"جَبَلٌ","gundul":"جبل","id":"gunung","latin":"jabalun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ج - ب - ل","wazan":"فَعَلٌ","bina":"Shahih Salim","contoh_ar":"الْجَبَلُ مُرْتَفِعٌ","contoh_id":"Gunung itu tinggi","seakar":["جِبَالٌ","جَبَلِيٌّ"]},
+    {"ar":"شَجَرَةٌ","gundul":"شجرة","id":"pohon","latin":"syajaratun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"ش - ج - ر","wazan":"فَعَلَةٌ","bina":"Shahih Salim","contoh_ar":"تَحْتَ الشَّجَرَةِ ظِلٌّ بَارِدٌ","contoh_id":"Di bawah pohon itu ada naungan yang sejuk","seakar":["شَجَرٌ","أَشْجَارٌ","مُشَجَّرٌ"]},
+    {"ar":"زَهْرَةٌ","gundul":"زهرة","id":"bunga","latin":"zahratun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"ز - ه - ر","wazan":"فَعْلَةٌ","bina":"Shahih Salim","contoh_ar":"الزَّهْرَةُ ذَاتُ رَائِحَةٍ طَيِّبَةٍ","contoh_id":"Bunga itu memiliki aroma yang harum","seakar":["زَهْرٌ","أَزْهَارٌ","مُزْهِرٌ"]},
+    {"ar":"حَدِيقَةٌ","gundul":"حديقة","id":"taman, kebun","latin":"hadiqatun","jenis":"Isim","subjenis":"Isim Jamid Muannats","jidzr":"ح - د - ق","wazan":"فَعِيلَةٌ","bina":"Shahih Salim","contoh_ar":"نَتَنَزَّهُ فِي الْحَدِيقَةِ","contoh_id":"Kami berjalan-jalan santai di taman","seakar":["حَدَائِقُ"]},
+    {"ar":"خَرَجَ","gundul":"خرج","id":"keluar","latin":"kharaja","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"خ - ر - ج","wazan":"فَعَلَ - يَخْرُجُ (Tsulatsi Mujarrad Bab 1)","bina":"Shahih Salim","contoh_ar":"خَرَجَ الْمُوَظَّفُ مِنَ الشَّرِكَةِ","contoh_id":"Pegawai itu keluar dari perusahaan","seakar":["خُرُوجٌ","خَارِجٌ","مَخْرَجٌ","أَخْرَجَ"]},
+    {"ar":"دَخَلَ","gundul":"دخل","id":"masuk","latin":"dakhala","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"د - خ - ل","wazan":"فَعَلَ - يَدْخُلُ (Tsulatsi Mujarrad Bab 1)","bina":"Shahih Salim","contoh_ar":"دَخَلَ التَّلَامِيذُ الْفَصْلَ","contoh_id":"Para murid masuk ke kelas","seakar":["دُخُولٌ","دَاخِلٌ","مَدْخَلٌ","أَدْخَلَ"]},
+    {"ar":"جَلَسَ","gundul":"جلس","id":"duduk","latin":"jalasa","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ج - ل - س","wazan":"فَعَلَ - يَجْلِسُ (Tsulatsi Mujarrad Bab 2)","bina":"Shahih Salim","contoh_ar":"جَلَسْتُ عَلَى الْكُرْسِيِّ","contoh_id":"Saya duduk di atas kursi","seakar":["جُلُوسٌ","جَالِسٌ","مَجْلِسٌ"]},
+    {"ar":"قَامَ","gundul":"قام","id":"berdiri, bangkit, melaksanakan","latin":"qama","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ق - و - م","wazan":"فَعَلَ - يَقُومُ (Tsulatsi Mujarrad Bab 1)","bina":"Ajwaf Wawi","contoh_ar":"قَامَ الْحَاضِرُونَ احْتِرَامًا","contoh_id":"Para hadirin berdiri sebagai tanda hormat","seakar":["قِيَامٌ","قَائِمٌ","مَقَامٌ","أَقَامَ"]},
+    {"ar":"نَامَ","gundul":"نام","id":"tidur","latin":"nama","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ن - و - م","wazan":"فَعِلَ - يَنَامُ (Tsulatsi Mujarrad Bab 4)","bina":"Ajwaf Wawi","contoh_ar":"نَامَ الرَّضِيعُ مُبَكِّرًا","contoh_id":"Bayi itu tidur lebih awal","seakar":["نَوْمٌ","نَائِمٌ","مَنَامٌ"]},
+    {"ar":"حَفِظَ","gundul":"حفظ","id":"menghafal, menjaga, memelihara","latin":"hafizha","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ح - ف - ظ","wazan":"فَعِلَ - يَحْفَظُ (Tsulatsi Mujarrad Bab 4)","bina":"Shahih Salim","contoh_ar":"حَفِظْتُ قَصِيدَةً قَصِيرَةً","contoh_id":"Saya menghafal sebuah syair pendek","seakar":["حِفْظٌ","حَافِظٌ","مَحْفُوظٌ","مُحَافَظَةٌ"]},
+    {"ar":"فَهِمَ","gundul":"فهم","id":"memahami, mengerti","latin":"fahima","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"ف - ه - م","wazan":"فَعِلَ - يَفْهَمُ (Tsulatsi Mujarrad Bab 4)","bina":"Shahih Salim","contoh_ar":"فَهِمْتُ قَاعِدَةَ النَّحْوِ","contoh_id":"Saya memahami kaidah nahwu","seakar":["فَهْمٌ","فَاهِمٌ","مَفْهُومٌ","تَفَاهُمٌ"]},
+    {"ar":"سَأَلَ","gundul":"سال","id":"bertanya, meminta","latin":"sa'ala","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"س - أ - ل","wazan":"فَعَلَ - يَسْأَلُ (Tsulatsi Mujarrad Bab 3)","bina":"Mahmuz 'Ain","contoh_ar":"سَأَلَ الطَّالِبُ مُدَرِّسَهُ","contoh_id":"Siswa itu bertanya kepada gurunya","seakar":["سُؤَالٌ","سَائِلٌ","مَسْؤُولٌ","مَسْأَلَةٌ"]},
+    {"ar":"أَجَابَ","gundul":"اجاب","id":"menjawab, mengabulkan","latin":"ajaba","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum (Mazid Ruba'i)","jidzr":"ج - و - ب","wazan":"أَفْعَلَ - يُجِيبُ","bina":"Ajwaf Wawi","contoh_ar":"أَجَابَ عَنِ السُّؤَالِ بِوُضُوحٍ","contoh_id":"Dia menjawab pertanyaan itu dengan jelas","seakar":["جَوَابٌ","إِجَابَةٌ","مُجِيبٌ","اسْتَجَابَ"]},
+    {"ar":"حَبِيبٌ","gundul":"حبيب","id":"kekasih, yang dicintai","latin":"habibun","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Shifat","jidzr":"ح - ب - ب","wazan":"فَعِيلٌ","bina":"Mudha'af","contoh_ar":"أَحِبَّاءُ الْعِلْمِ كَثِيرُونَ","contoh_id":"Para pencinta ilmu jumlahnya banyak","seakar":["حَبَّ","حُبٌّ","مَحْبُوبٌ","أَحَبَّ"]},
+    {"ar":"صَدِيقٌ","gundul":"صديق","id":"teman dekat, sahabat","latin":"shadiqun","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Shifat","jidzr":"ص - د - ق","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"صَدِيقِي صَادِقٌ فِي قَوْلِهِ","contoh_id":"Sahabatku jujur dalam ucapannya","seakar":["صَدَقَ","صِدْقٌ","أَصْدِقَاءُ","تَصْدِيقٌ"]},
+    {"ar":"مِفْتَاحٌ","gundul":"مفتاح","id":"kunci","latin":"miftahun","jenis":"Isim","subjenis":"Isim Alat","jidzr":"ف - ت - ح","wazan":"مِفْعَالٌ","bina":"Shahih Salim","contoh_ar":"أَيْنَ مِفْتَاحُ السَّيَّارَةِ؟","contoh_id":"Di mana kunci mobil itu?","seakar":["فَتَحَ","فَتْحٌ","مَفَاتِيحُ"]},
+    {"ar":"كُرْسِيٌّ","gundul":"كرسي","id":"kursi","latin":"kursiyyun","jenis":"Isim","subjenis":"Isim Jamid (Isim Mansub)","jidzr":"ك - ر - س","wazan":"فُعْلِيلٌ","bina":"Shahih Salim","contoh_ar":"الْكُرْسِيُّ خَشَبِيٌّ","contoh_id":"Kursi itu terbuat dari kayu","seakar":["كَرَاسِيُّ"]},
+    {"ar":"سَاعَةٌ","gundul":"ساعة","id":"jam, waktu, saat","latin":"sa'atun","jenis":"Isim","subjenis":"Isim Zaman / Isim Jamid Muannats","jidzr":"س - و - ع","wazan":"فَعَلَةٌ","bina":"Ajwaf Wawi","contoh_ar":"انْتَظَرْتُهُ سَاعَةً كَامِلَةً","contoh_id":"Saya menunggunya selama satu jam penuh","seakar":["سَاعَاتٌ","أُسْبُوعٌ"]},
+    {"ar":"أُسْبُوعٌ","gundul":"اسبوع","id":"pekan, minggu","latin":"usbu'un","jenis":"Isim","subjenis":"Isim Zaman / Isim Jamid","jidzr":"س - ب - ع","wazan":"أُفْعُولٌ","bina":"Shahih Salim","contoh_ar":"نَسَافِرُ كُلَّ أُسْبُوعٍ","contoh_id":"Kami bepergian setiap pekan","seakar":["أَسَابِيعُ","سَبْعَةٌ"]},
+    {"ar":"شَهْرٌ","gundul":"شهر","id":"bulan (kalender), purnama","latin":"syahrun","jenis":"Isim","subjenis":"Isim Zaman / Isim Jamid","jidzr":"ش - ه - ر","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"رَمَضَانُ شَهْرُ الْقُرْآنِ","contoh_id":"Ramadhan adalah bulan Al-Qur'an","seakar":["شُهُورٌ","أَشْهُرٌ","شَهْرِيٌّ"]},
+    {"ar":"سَنَةٌ","gundul":"سنة","id":"tahun","latin":"sanatun","jenis":"Isim","subjenis":"Isim Zaman / Isim Jamid Muannats","jidzr":"س - ن - و","wazan":"فَعَلَةٌ (asalnya سَنَوَةٌ)","bina":"Naqish Wawi","contoh_ar":"مَرَّتْ سَنَةٌ كَامِلَةٌ","contoh_id":"Satu tahun penuh telah berlalu","seakar":["سَنَوَاتٌ","سَنَوِيٌّ"]},
+    {"ar":"خَيْرٌ","gundul":"خير","id":"kebaikan, lebih baik, harta","latin":"khayrun","jenis":"Isim","subjenis":"Isim Tafdhil Sima'i / Mashdar","jidzr":"خ - ي - ر","wazan":"فَعْلٌ","bina":"Ajwaf Ya'i","contoh_ar":"الْعَمَلُ الصَّالِحُ خَيْرٌ","contoh_id":"Amal saleh itu baik/utama","seakar":["خَيِّرٌ","اخْتَارَ","اخْتِيَارٌ"]},
+    {"ar":"شَرٌّ","gundul":"شر","id":"keburukan, kejahatan","latin":"syarrun","jenis":"Isim","subjenis":"Isim Tafdhil Sima'i / Mashdar","jidzr":"ش - ر - ر","wazan":"فَعْلٌ","bina":"Mudha'af","contoh_ar":"نَعُوذُ بِاللَّهِ مِنْ شَرِّ النَّفْسِ","contoh_id":"Kami berlindung kepada Allah dari keburukan jiwa","seakar":["شِرِّيرٌ","أَشْرَارٌ"]},
+    {"ar":"حَقٌّ","gundul":"حق","id":"kebenaran, hak, pasti","latin":"haqqun","jenis":"Isim","subjenis":"Mashdar / Isim Shifat","jidzr":"ح - ق - ق","wazan":"فَعْلٌ","bina":"Mudha'af","contoh_ar":"الْحَقُّ ظَاهِرٌ","contoh_id":"Kebenaran itu tampak jelas","seakar":["حَقِيقَةٌ","حَقِيقِيٌّ","اسْتَحَقَّ"]},
+    {"ar":"حُبٌّ","gundul":"حب","id":"cinta, kasih sayang","latin":"hubbun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ح - ب - ب","wazan":"فُعْلٌ","bina":"Mudha'af","contoh_ar":"حُبُّ الْوَطَنِ مِنَ الْإِيمَانِ","contoh_id":"Cinta tanah air sebagian dari iman","seakar":["أَحَبَّ","مَحَبَّةٌ","حَبِيبٌ","مَحْبُوبٌ"]},
+    {"ar":"سَلَامٌ","gundul":"سلام","id":"keselamatan, damai, salam","latin":"salamun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid","jidzr":"س - ل - م","wazan":"فَعَالٌ","bina":"Shahih Salim","contoh_ar":"السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ","contoh_id":"Semoga keselamatan terlimpah atas kalian dan rahmat Allah","seakar":["سَلِمَ","سَالِمٌ","إِسْلَامٌ","مُسْلِمٌ"]},
+    {"ar":"إِسْلَامٌ","gundul":"اسلام","id":"Islam, ketundukan/pasrah kepada Allah","latin":"islamun","jenis":"Isim","subjenis":"Mashdar Ruba'i (dari أَسْلَمَ)","jidzr":"س - ل - م","wazan":"إِفْعَالٌ","bina":"Shahih Salim","contoh_ar":"الْإِسْلَامُ دِينُ السَّلَامِ","contoh_id":"Islam adalah agama keselamatan","seakar":["أَسْلَمَ","مُسْلِمٌ","سَلَامٌ","سَلِمَ"]},
+    {"ar":"مُسْلِمٌ","gundul":"مسلم","id":"muslim, orang yang berserah diri kepada Allah","latin":"muslimun","jenis":"Isim","subjenis":"Isim Fa'il (dari أَسْلَمَ)","jidzr":"س - ل - م","wazan":"مُفْعِلٌ","bina":"Shahih Salim","contoh_ar":"الْمُسْلِمُ أَخُو الْمُسْلِمِ","contoh_id":"Seorang muslim adalah saudara bagi muslim lainnya","seakar":["أَسْلَمَ","إِسْلَامٌ","مُسْلِمُونَ","مُسْلِمَاتٌ"]},
+    {"ar":"مُؤْمِنٌ","gundul":"مؤمن","id":"mukmin, orang yang beriman","latin":"mu'minun","jenis":"Isim","subjenis":"Isim Fa'il (dari آمَنَ)","jidzr":"أ - م - ن","wazan":"مُفْعِلٌ","bina":"Mahmuz Fa'","contoh_ar":"قَدْ أَفْلَحَ الْمُؤْمِنُونَ","contoh_id":"Sungguh beruntung orang-orang yang beriman","seakar":["آمَنَ","إِيمَانٌ","أَمْنٌ","أَمَانَةٌ"]},
+    {"ar":"إِيمَانٌ","gundul":"ايمان","id":"iman, keyakinan","latin":"imanun","jenis":"Isim","subjenis":"Mashdar Ruba'i (dari آمَنَ)","jidzr":"أ - م - ن","wazan":"إِفْعَالٌ","bina":"Mahmuz Fa'","contoh_ar":"الْإِيمَانُ بِضْعٌ وَسَبْعُونَ شُعْبَةً","contoh_id":"Iman itu ada tujuh puluh sekian cabang","seakar":["آمَنَ","مُؤْمِنٌ","أَمْنٌ","أَمِينٌ"]},
+    {"ar":"صَلَاةٌ","gundul":"صلاة","id":"shalat, doa","latin":"shalatun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid Muannats","jidzr":"ص - ل - و","wazan":"فَعَلَةٌ (asalnya صَلَوَةٌ)","bina":"Naqish Wawi","contoh_ar":"أَقِمِ الصَّلَاةَ لِدُلُوكِ الشَّمْسِ","contoh_id":"Dirikanlah shalat sejak matahari tergelincir","seakar":["صَلَّى","مُصَلًّى","صَلَوَاتٌ"]},
+    {"ar":"زَكَاةٌ","gundul":"زكاة","id":"zakat, penyucian, pertumbuhan","latin":"zakatun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid Muannats","jidzr":"ز - ك - و","wazan":"فَعَلَةٌ (asalnya زَكَوَةٌ)","bina":"Naqish Wawi","contoh_ar":"آتُوا الزَّكَاةَ","contoh_id":"Tunaikanlah zakat","seakar":["زَكَى","زَكِيٌّ","تَزْكِيَةٌ"]},
+    {"ar":"صَوْمٌ","gundul":"صوم","id":"puasa, menahan diri","latin":"shawmun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ص - و - م","wazan":"فَعْلٌ","bina":"Ajwaf Wawi","contoh_ar":"صَوْمُ رَمَضَانَ رُكْنٌ مِنَ الْإِسْلَامِ","contoh_id":"Puasa Ramadhan adalah salah satu rukun Islam","seakar":["صَامَ","صَائِمٌ","صِيَامٌ"]},
+    {"ar":"حَجٌّ","gundul":"حج","id":"haji, menyengaja berkunjung","latin":"hajjun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ح - ج - ج","wazan":"فَعْلٌ","bina":"Mudha'af","contoh_ar":"حَجَّ الْمُسْلِمُ إِلَى الْبَيْتِ الْحَرَامِ","contoh_id":"Muslim itu berhaji ke Baitullah Al-Haram","seakar":["حَجَّ","حَاجٌّ","مَحَجَّةٌ"]},
+    {"ar":"رَبٌّ","gundul":"رب","id":"Tuhan, Rabb, pemilik, pendidik","latin":"rabbun","jenis":"Isim","subjenis":"Mashdar / Isim Shifat","jidzr":"ر - ب - ب","wazan":"فَعْلٌ","bina":"Mudha'af","contoh_ar":"الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ","contoh_id":"Segala puji bagi Allah, Rabb seluruh alam","seakar":["رَبَّى","تَرْبِيَةٌ","رَبَّانِيٌّ"]},
+    {"ar":"عَبْدٌ","gundul":"عبد","id":"hamba, pengabdi, pelayan","latin":"'abdun","jenis":"Isim","subjenis":"Isim Jamid / Mashdar","jidzr":"ع - ب - د","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"أَنَا عَبْدُ اللَّهِ","contoh_id":"Saya adalah hamba Allah","seakar":["عَبَدَ","عِبَادَةٌ","عَابِدٌ","مَعْبُودٌ"]},
+    {"ar":"رَسُولٌ","gundul":"رسول","id":"utusan, rasul","latin":"rasulun","jenis":"Isim","subjenis":"Fa'il bi ma'na Maf'ul / Isim Shifat","jidzr":"ر - س - ل","wazan":"فَعُولٌ","bina":"Shahih Salim","contoh_ar":"مُحَمَّدٌ رَسُولُ اللَّهِ","contoh_id":"Muhammad adalah utusan Allah","seakar":["أَرْسَلَ","رِسَالَةٌ","مُرْسَلٌ"]},
+    {"ar":"نَبِيٌّ","gundul":"نبي","id":"nabi","latin":"nabiyyun","jenis":"Isim","subjenis":"Fa'il bi ma'na Maf'ul (Isim Mansub)","jidzr":"ن - ب - أ","wazan":"فَعِيلٌ (asalnya نَبِيءٌ)","bina":"Mahmuz Lam","contoh_ar":"الْأَنْبِيَاءُ صَادِقُونَ","contoh_id":"Para nabi itu jujur","seakar":["نُبُوَّةٌ","أَنْبَأَ","نَبَأٌ"]},
+    {"ar":"إِنْسَانٌ","gundul":"انسان","id":"manusia, insan","latin":"insanun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"أ - ن - س","wazan":"فِعْلَانٌ","bina":"Mahmuz Fa'","contoh_ar":"خَلَقَ اللَّهُ الْإِنْسَانَ","contoh_id":"Allah menciptakan manusia","seakar":["إِنْسٌ","أُنَاسٌ","إِنْسَانِيَّةٌ"]},
+    {"ar":"نَاسٌ","gundul":"ناس","id":"manusia, orang-orang","latin":"nasun","jenis":"Isim","subjenis":"Isim Jamid (asalnya أُنَاسٌ)","jidzr":"أ - ن - س","wazan":"فَعَالٌ","bina":"Mahmuz Fa'","contoh_ar":"النَّاسُ سَوَاسِيَةٌ","contoh_id":"Manusia itu setara","seakar":["إِنْسَانٌ","أُنَاسٌ"]},
+    {"ar":"قَلْبٌ","gundul":"قلب","id":"hati, kalbu, inti","latin":"qalbun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ق - ل - ب","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"صَلَاحُ الْجَسَدِ بِصَلَاحِ الْقَلْبِ","contoh_id":"Baiknya jasad bergantung pada baiknya hati","seakar":["قَلَبَ","قُلُوبٌ","تَقَلُّبٌ"]},
+    {"ar":"عَقْلٌ","gundul":"عقل","id":"akal, pikiran, pemahaman","latin":"'aqlun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid","jidzr":"ع - ق - ل","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"الْعَقْلُ السَّلِيمُ فِي الْجِسْمِ السَّلِيمِ","contoh_id":"Akal yang sehat terdapat pada tubuh yang sehat","seakar":["عَقَلَ","عَاقِلٌ","عُقُولٌ","مَعْقُولٌ"]},
+    {"ar":"لِسَانٌ","gundul":"لسان","id":"lidah, bahasa","latin":"lisanun","jenis":"Isim","subjenis":"Isim Jamid","jidzr":"ل - س - ن","wazan":"فِعَالٌ","bina":"Shahih Salim","contoh_ar":"الْحِفْظُ عَلَى اللِّسَانِ","contoh_id":"Menjaga ucapan lisan","seakar":["أَلْسِنَةٌ","لِسَانِيٌّ"]},
+    {"ar":"يَدٌ","gundul":"يد","id":"tangan, kekuasaan, bantuan","latin":"yadun","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"ي - د - ي","wazan":"فَعْلٌ (asalnya يَدَيٌ)","bina":"Mithal Ya'i Naqish Ya'i","contoh_ar":"الْيَدُ الْعُلْيَا خَيْرٌ مِنَ الْيَدِ السُّفْلَى","contoh_id":"Tangan di atas lebih baik daripada tangan di bawah","seakar":["أَيْدٍ","يَدَوِيٌّ"]},
+    {"ar":"عَيْنٌ","gundul":"عين","id":"mata, mata air, zat/diri","latin":"'aynun","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"ع - ي - ن","wazan":"فَعْلٌ","bina":"Ajwaf Ya'i","contoh_ar":"الْعَيْنُ تَرَى الْأَلْوَانَ","contoh_id":"Mata melihat warna-warna","seakar":["عُيُونٌ","أَعْيُنٌ","عَايَنَ"]},
+    {"ar":"أُذُنٌ","gundul":"اذن","id":"telinga","latin":"udzunun","jenis":"Isim","subjenis":"Isim Jamid Muannats Sima'i","jidzr":"أ - ذ - ن","wazan":"فُعُلٌ","bina":"Mahmuz Fa'","contoh_ar":"نَسْمَعُ بِالْأُذُنِ","contoh_id":"Kita mendengar dengan telinga","seakar":["آذَانٌ","أَذِنَ","إِذْنٌ"]},
+    {"ar":"مَالٌ","gundul":"مال","id":"harta, uang, kekayaan","latin":"malun","jenis":"Isim","subjenis":"Isim Jamid (asalnya مَوْلٌ)","jidzr":"م - و - ل","wazan":"فَعْلٌ","bina":"Ajwaf Wawi","contoh_ar":"الْمَالُ أَمَانَةٌ","contoh_id":"Harta adalah amanah","seakar":["أَمْوَالٌ","مَالِيٌّ","تَمَوَّلَ"]},
+    {"ar":"عَمَلٌ","gundul":"عمل","id":"pekerjaan, amal, perbuatan","latin":"'amalun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ع - م - ل","wazan":"فَعَلٌ","bina":"Shahih Salim","contoh_ar":"كُلُّ امْرِئٍ بِمَا كَسَبَ رَهِينٌ","contoh_id":"Setiap orang terikat dengan apa yang ia usahakan","seakar":["عَمِلَ","عَامِلٌ","أَعْمَالٌ","مَعْمُولٌ"]},
+    {"ar":"حِكْمَةٌ","gundul":"حكمة","id":"hikmah, kebijaksanaan, filsafat","latin":"hikmatun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid Muannats","jidzr":"ح - ك - م","wazan":"فِعْلَةٌ","bina":"Shahih Salim","contoh_ar":"الْحِكْمَةُ ضَالَّةُ الْمُؤْمِنِ","contoh_id":"Hikmah adalah barang yang hilang milik orang beriman","seakar":["حَكَمَ","حَكِيمٌ","حُكْمٌ","أَحْكَامٌ"]},
+    {"ar":"صَبْرٌ","gundul":"صبر","id":"sabar, ketabahan","latin":"shabrun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ص - ب - ر","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"الصَّبْرُ مِفْتَاحُ الْفَرَجِ","contoh_id":"Sabar adalah kunci kelapangan","seakar":["صَبَرَ","صَابِرٌ","صَبُورٌ","اصْطَبَرَ"]},
+    {"ar":"شُكْرٌ","gundul":"شكر","id":"syukur, terima kasih","latin":"syukrun","jenis":"Isim","subjenis":"Mashdar Tsulatsi","jidzr":"ش - ك - ر","wazan":"فُعْلٌ","bina":"Shahih Salim","contoh_ar":"لَئِنْ شَكَرْتُمْ لَأَزِيدَنَّكُمْ","contoh_id":"Sungguh jika kalian bersyukur, niscaya Aku akan menambah nikmat kepada kalian","seakar":["شَكَرَ","شَاكِرٌ","شَكُورٌ","مَشْكُورٌ"]},
+    {"ar":"رَحْمَةٌ","gundul":"رحمة","id":"rahmat, kasih sayang","latin":"rahmatun","jenis":"Isim","subjenis":"Mashdar / Isim Jamid Muannats","jidzr":"ر - ح - م","wazan":"فَعْلَةٌ","bina":"Shahih Salim","contoh_ar":"رَحْمَةُ اللَّهِ وَاسِعَةٌ","contoh_id":"Rahmat Allah sangat luas","seakar":["رَحِمَ","رَحِيمٌ","رَحْمَنٌ","مَرْحَمَةٌ"]},
+    {"ar":"غَفَرَ","gundul":"غفر","id":"mengampuni, memaafkan","latin":"ghafara","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum","jidzr":"غ - ف - ر","wazan":"فَعَلَ - يَغْفِرُ (Tsulatsi Mujarrad Bab 2)","bina":"Shahih Salim","contoh_ar":"غَفَرَ اللَّهُ ذُنُوبَنَا","contoh_id":"Semoga Allah mengampuni dosa-dosa kita","seakar":["غَفْرٌ","مَغْفِرَةٌ","غَفُورٌ","اسْتَغْفَرَ"]},
+    {"ar":"أَحَبَّ","gundul":"احب","id":"mencintai, menyukai","latin":"ahabba","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum (Mazid Ruba'i)","jidzr":"ح - ب - ب","wazan":"أَفْعَلَ - يُحِبُّ","bina":"Mudha'af","contoh_ar":"أُحِبُّ اللُّغَةَ الْعَرَبِيَّةَ","contoh_id":"Saya mencintai bahasa Arab","seakar":["حُبٌّ","حَبِيبٌ","مَحْبُوبٌ","مَحَبَّةٌ"]},
+    {"ar":"تَعَلَّمَ","gundul":"تعلم","id":"belajar, mempelajari","latin":"ta'allama","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum (Mazid Khumasi)","jidzr":"ع - ل - م","wazan":"تَفَعَّلَ - يَتَعَلَّمُ","bina":"Shahih Salim","contoh_ar":"تَعَلَّمْ وَعَلِّمْ","contoh_id":"Belajarlah dan ajarilah","seakar":["عَلَّمَ","تَعْلِيمٌ","عِلْمٌ","مُتَعَلِّمٌ"]},
+    {"ar":"اسْتَغْفَرَ","gundul":"استغفر","id":"memohon ampun, beristighfar","latin":"istaghfara","jenis":"Fi'il","subjenis":"Fi'il Madhi Ma'lum (Mazid Sudasi)","jidzr":"غ - ف - ر","wazan":"اسْتَفْعَلَ - يَسْتَغْفِرُ","bina":"Shahih Salim","contoh_ar":"أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ","contoh_id":"Saya memohon ampun kepada Allah Yang Maha Agung","seakar":["غَفَرَ","اسْتِغْفَارٌ","مَغْفِرَةٌ"]},
+    {"ar":"جَمِيعٌ","gundul":"جميع","id":"semua, seluruh, bersama-sama","latin":"jami'un","jenis":"Isim","subjenis":"Shifat Musyabbahah / Isim Tawkit","jidzr":"ج - م - ع","wazan":"فَعِيلٌ","bina":"Shahih Salim","contoh_ar":"حَضَرَ الطُّلَّابُ جَمِيعًا","contoh_id":"Semua siswa telah hadir","seakar":["جَمَعَ","جَمْعٌ","جَامِعَةٌ","مَجْمُوعٌ"]},
+    {"ar":"كُلٌّ","gundul":"كل","id":"setiap, semua, seluruh","latin":"kullun","jenis":"Isim","subjenis":"Isim Mubham / Tawkit (Mudhaf)","jidzr":"ك - ل - ل","wazan":"فُعْلٌ","bina":"Mudha'af","contoh_ar":"كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ","contoh_id":"Setiap jiwa pasti akan merasakan mati","seakar":["كُلِّيٌّ","كُلِّيَّةٌ"]},
+    {"ar":"بَعْضٌ","gundul":"بعض","id":"sebagian, beberapa","latin":"ba'dhun","jenis":"Isim","subjenis":"Isim Mubham / Mudhaf","jidzr":"ب - ع - ض","wazan":"فَعْلٌ","bina":"Shahih Salim","contoh_ar":"قَرَأْتُ بَعْضَ الْكِتَابِ","contoh_id":"Saya membaca sebagian buku itu","seakar":["أَبْعَاضٌ","تَبَعُّضٌ"]},
+    {"ar":"مِصْرُ","gundul":"مصر","id":"Mesir","latin":"Mishru","jenis":"Isim","subjenis":"Isim 'Alam Muannats / Ghairu Munsharif","jidzr":"م - ص - ر","wazan":"فِعْلٌ","bina":"Shahih Salim","contoh_ar":"سَافَرْتُ إِلَى مِصْرَ","contoh_id":"Saya bepergian ke Mesir","seakar":["مِصْرِيٌّ","أَمْصَارٌ"]},
+    {"ar":"مَكَّةُ","gundul":"مكة","id":"Makkah","latin":"Makkah","jenis":"Isim","subjenis":"Isim 'Alam Muannats Ma'nawi / Ghairu Munsharif","jidzr":"م - ك - ك","wazan":"فَعْلَةٌ","bina":"Mudha'af","contoh_ar":"الْمَسْجِدُ الْحَرَامُ فِي مَكَّةَ","contoh_id":"Masjidil Haram berada di Makkah","seakar":["مَكِّيٌّ"]},
+    {"ar":"لُغَةٌ","gundul":"لغة","id":"bahasa","latin":"lughatun","jenis":"Isim","subjenis":"Isim Jamid Muannats (asalnya لُغْوَةٌ)","jidzr":"ل - غ - و","wazan":"فُعَلَةٌ","bina":"Naqish Wawi","contoh_ar":"اللُّغَةُ الْعَرَبِيَّةُ غَنِيَّةٌ","contoh_id":"Bahasa Arab itu kaya kosakata","seakar":["لُغَاتٌ","لُغَوِيٌّ"]}
+  ]
+  </script>
+
+  <!-- =====================================================================
+       BAGIAN LOGIKA APLIKASI (setara script.js)
+       ===================================================================== -->
+  <script id="app-script">
+    // =========================================================================
+    // 1. KONFIGURASI & KUNCI PENYIMPANAN LOKAL (localStorage)
+    // =========================================================================
+    const STORAGE_KEYS = {
+      API_KEY: 'kamus_ar_id_gemini_api_key_v1',
+      CACHE: 'kamus_ar_id_cache_v1',
+      FAVORITES: 'kamus_ar_id_favorites_v1',
+      HISTORY: 'kamus_ar_id_history_v1',
+      THEME: 'kamus_ar_id_theme_v1',
+      FONT_SIZE: 'kamus_ar_id_font_size_v1'
+    };
+
+    const GEMINI_MODEL = 'gemini-3-flash-preview';
+
+    const SYSTEM_INSTRUCTION =
+      "Kamu pakar nahwu dan sharaf. Analisis hanya berdasarkan kaidah nahwu-sharaf yang baku. Jangan mengarang kata atau bentuk tashrif; jika ragu atau ada khilaf, tulis 'ada perbedaan pendapat' atau 'tidak yakin'.";
+
+    // Daftar huruf Hijaiyah & harakat untuk keyboard Arab virtual
+    const ARABIC_LETTERS = [
+      'ا', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص',
+      'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي',
+      'ء', 'أ', 'إ', 'آ', 'ؤ', 'ئ', 'ى', 'ة'
+    ];
+
+    const ARABIC_HARAKAT = [
+      { mark: '\u064E', label: 'ـَ (Fathah)' },
+      { mark: '\u0650', label: 'ـِ (Kasrah)' },
+      { mark: '\u064F', label: 'ـُ (Dhammah)' },
+      { mark: '\u064B', label: 'ـً (Fathatain)' },
+      { mark: '\u064D', label: 'ـٍ (Kasratain)' },
+      { mark: '\u064C', label: 'ـٌ (Dhammatain)' },
+      { mark: '\u0652', label: 'ـْ (Sukun)' },
+      { mark: '\u0651', label: 'ـّ (Syiddah)' },
+      { mark: '\u0670', label: 'ـٰ (Alif Khanjariyah)' }
+    ];
+
+    // Kamus padanan kata Indonesia/Latin -> Arab dasar untuk mempermudah pencarian tanpa API
+    const ID_TO_AR_HINTS = {
+      'buku': 'كِتَابٌ',
+      'kitab': 'كِتَابٌ',
+      'menulis': 'كَتَبَ',
+      'tulis': 'كَتَبَ',
+      'pena': 'قَلَمٌ',
+      'pulpen': 'قَلَمٌ',
+      'ilmu': 'عِلْمٌ',
+      'pengetahuan': 'عِلْمٌ',
+      'tahu': 'عَلِمَ',
+      'mengetahui': 'عَلِمَ',
+      'guru': 'مُعَلِّمٌ',
+      'pelajar': 'طَالِبٌ',
+      'siswa': 'طَالِبٌ',
+      'mahasiswa': 'طَالِبٌ',
+      'sekolah': 'مَدْرَسَةٌ',
+      'rumah': 'بَيْتٌ',
+      'masjid': 'مَسْجِدٌ',
+      'pergi': 'ذَهَبَ',
+      'datang': 'جَاءَ',
+      'membaca': 'قَرَأَ',
+      'baca': 'قَرَأَ',
+      'membuka': 'فَتَحَ',
+      'buka': 'فَتَحَ',
+      'menolong': 'نَصَرَ',
+      'laki': 'رَجُلٌ',
+      'pria': 'رَجُلٌ',
+      'wanita': 'امْرَأَةٌ',
+      'perempuan': 'امْرَأَةٌ',
+      'anak': 'وَلَدٌ',
+      'ayah': 'أَبٌ',
+      'bapak': 'أَبٌ',
+      'ibu': 'أُمٌّ',
+      'saudara': 'أَخٌ',
+      'hari': 'يَوْمٌ',
+      'malam': 'لَيْلٌ',
+      'matahari': 'شَمْسٌ',
+      'bulan': 'قَمَرٌ',
+      'langit': 'سَمَاءٌ',
+      'bumi': 'أَرْضٌ',
+      'air': 'مَاءٌ',
+      'api': 'نَارٌ',
+      'cahaya': 'نُورٌ',
+      'makanan': 'طَعَامٌ',
+      'minuman': 'شَرَابٌ',
+      'makan': 'أَكَلَ',
+      'minum': 'شَرِبَ',
+      'bekerja': 'عَمِلَ',
+      'amal': 'عَمَلٌ',
+      'mendengar': 'سَمِعَ',
+      'dengar': 'سَمِعَ',
+      'melihat': 'رَأَى',
+      'lihat': 'رَأَى',
+      'berkata': 'قَالَ',
+      'kata': 'قَالَ',
+      'dari': 'مِنْ',
+      'ke': 'إِلَى',
+      'di': 'فِي',
+      'atas': 'عَلَى',
+      'besar': 'كَبِيرٌ',
+      'kecil': 'صَغِيرٌ',
+      'baru': 'جَدِيدٌ',
+      'lama': 'قَدِيمٌ',
+      'indah': 'جَمِيلٌ',
+      'bagus': 'جَمِيلٌ',
+      'pasar': 'سُوقٌ',
+      'kota': 'مَدِينَةٌ',
+      'negara': 'بَلَدٌ',
+      'negeri': 'بَلَدٌ',
+      'pintu': 'بَابٌ',
+      'jendela': 'نَافِذَةٌ',
+      'kamar': 'غُرْفَةٌ',
+      'kantor': 'مَكْتَبٌ',
+      'perpustakaan': 'مَكْتَبَةٌ',
+      'universitas': 'جَامِعَةٌ',
+      'mobil': 'سَيَّارَةٌ',
+      'jalan': 'طَرِيقٌ',
+      'laut': 'بَحْرٌ',
+      'sungai': 'نَهْرٌ',
+      'gunung': 'جَبَلٌ',
+      'pohon': 'شَجَرَةٌ',
+      'bunga': 'زَهْرَةٌ',
+      'taman': 'حَدِيقَةٌ',
+      'keluar': 'خَرَجَ',
+      'masuk': 'دَخَلَ',
+      'duduk': 'جَلَسَ',
+      'berdiri': 'قَامَ',
+      'tidur': 'نَامَ',
+      'menghafal': 'حَفِظَ',
+      'hafal': 'حَفِظَ',
+      'memahami': 'فَهِمَ',
+      'paham': 'فَهِمَ',
+      'bertanya': 'سَأَلَ',
+      'tanya': 'سَأَلَ',
+      'menjawab': 'أَجَابَ',
+      'jawab': 'أَجَابَ',
+      'sahabat': 'صَدِيقٌ',
+      'teman': 'صَدِيقٌ',
+      'kunci': 'مِفْتَاحٌ',
+      'kursi': 'كُرْسِيٌّ',
+      'jam': 'سَاعَةٌ',
+      'minggu': 'أُسْبُوعٌ',
+      'pekan': 'أُسْبُوعٌ',
+      'tahun': 'سَنَةٌ',
+      'baik': 'خَيْرٌ',
+      'buruk': 'شَرٌّ',
+      'benar': 'حَقٌّ',
+      'cinta': 'حُبٌّ',
+      'salam': 'سَلَامٌ',
+      'damai': 'سَلَامٌ',
+      'islam': 'إِسْلَامٌ',
+      'muslim': 'مُسْلِمٌ',
+      'mukmin': 'مُؤْمِنٌ',
+      'iman': 'إِيمَانٌ',
+      'shalat': 'صَلَاةٌ',
+      'zakat': 'زَكَاةٌ',
+      'puasa': 'صَوْمٌ',
+      'haji': 'حَجٌّ',
+      'hamba': 'عَبْدٌ',
+      'rasul': 'رَسُولٌ',
+      'nabi': 'نَبِيٌّ',
+      'manusia': 'إِنْسَانٌ',
+      'hati': 'قَلْبٌ',
+      'akal': 'عَقْلٌ',
+      'bahasa': 'لُغَةٌ',
+      'tangan': 'يَدٌ',
+      'mata': 'عَيْنٌ',
+      'telinga': 'أُذُنٌ',
+      'harta': 'مَالٌ',
+      'hikmah': 'حِكْمَةٌ',
+      'sabar': 'صَبْرٌ',
+      'syukur': 'شُكْرٌ',
+      'rahmat': 'رَحْمَةٌ',
+      'mengampuni': 'غَفَرَ',
+      'ampun': 'غَفَرَ',
+      'belajar': 'تَعَلَّمَ',
+      'istighfar': 'اسْتَغْفَرَ',
+      'semua': 'جَمِيعٌ',
+      'setiap': 'كُلٌّ',
+      'sebagian': 'بَعْضٌ',
+      'mesir': 'مِصْرُ',
+      'makkah': 'مَكَّةُ'
+    };
+
+    // State aplikasi
+    let localDictionary = [];
+    let currentAnalysisData = null;
+    let currentSpeakText = '';
+
+    // =========================================================================
+    // 2. UTILITAS NORMALISASI TEKS ARAB & DETEKSI INPUT
+    // =========================================================================
+
+    /**
+     * Menghapus seluruh harakat / tanda baca Arab (tasykil & tatwil).
+     * @param {string} str
+     * @returns {string}
+     */
+    function stripDiacritics(str) {
+      if (!str) return '';
+      return str
+        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // harakat, sukun, syiddah, alif khanjariyah, tanda waqaf
+        .replace(/\u0640/g, '') // tatwil / kasidah (ـ)
+        .trim();
+    }
+
+    /**
+     * Normalisasi teks Arab untuk keperluan pencarian:
+     * - Menghapus harakat
+     * - Menyamakan bentuk alif (أ إ آ ٱ -> ا)
+     * - Menyamakan ya dan alif maqsurah (ى -> ي)
+     * - Menyamakan ta marbutah dan ha (ة -> ه)
+     * @param {string} text
+     * @returns {string}
+     */
+    function normalizeArabic(text) {
+      if (!text) return '';
+      return stripDiacritics(text)
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    /**
+     * Memeriksa apakah teks mengandung karakter huruf Arab.
+     * @param {string} text
+     * @returns {boolean}
+     */
+    function containsArabic(text) {
+      return /[\u0600-\u06FF]/.test(text || '');
+    }
+
+    /**
+     * Menentukan apakah input lebih menyerupai satu kata atau satu kalimat.
+     * Kalimat ditandai oleh spasi antar kata (lebih dari 1 token) atau tanda baca kalimat.
+     * @param {string} text
+     * @returns {'kalimat' | 'kata'}
+     */
+    function detectInputMode(text) {
+      const cleaned = (text || '').trim().replace(/[؟!.,،؛:]+$/g, '').trim();
+      const tokens = cleaned.split(/\s+/).filter(Boolean);
+      if (tokens.length > 1) return 'kalimat';
+      return 'kata';
+    }
+
+    // =========================================================================
+    // 3. MANAJEMEN STORAGE (API KEY, CACHE, FAVORIT, RIWAYAT, TEMA, FONT)
+    // =========================================================================
+
+    function getApiKey() {
+      try {
+        return (localStorage.getItem(STORAGE_KEYS.API_KEY) || '').trim();
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function setApiKey(key) {
+      try {
+        if (key) {
+          localStorage.setItem(STORAGE_KEYS.API_KEY, key.trim());
+        } else {
+          localStorage.removeItem(STORAGE_KEYS.API_KEY);
+        }
+      } catch (e) {
+        showMessage('Gagal menyimpan API Key ke penyimpanan browser.', 'error');
+      }
+    }
+
+    function getCache() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.CACHE);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function setCacheEntry(cacheKey, payload) {
+      try {
+        const cache = getCache();
+        cache[cacheKey] = {
+          savedAt: new Date().toISOString(),
+          data: payload
+        };
+        // Batasi maksimal 80 entri cache agar localStorage tetap ringan
+        const keys = Object.keys(cache);
+        if (keys.length > 80) {
+          delete cache[keys[0]];
+        }
+        localStorage.setItem(STORAGE_KEYS.CACHE, JSON.stringify(cache));
+        updateCacheStats();
+      } catch (e) {
+        // Abaikan jika kuota penyimpanan penuh
+      }
+    }
+
+    function clearCache() {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.CACHE);
+        updateCacheStats();
+        showMessage('Cache hasil analisis berhasil dibersihkan.', 'success');
+      } catch (e) {
+        showMessage('Tidak dapat membersihkan cache.', 'error');
+      }
+    }
+
+    function updateCacheStats() {
+      const cache = getCache();
+      const count = Object.keys(cache).length;
+      const el = document.getElementById('cache-stats-text');
+      if (el) el.textContent = `Cache lokal: ${count} entri`;
+    }
+
+    function getListStorage(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveListStorage(key, arr) {
+      try {
+        localStorage.setItem(key, JSON.stringify(arr));
+      } catch (e) {
+        // Abaikan error penyimpanan
+      }
+    }
+
+    function addToHistory(query) {
+      const trimmed = query.trim();
+      if (!trimmed) return;
+      let history = getListStorage(STORAGE_KEYS.HISTORY);
+      history = history.filter((item) => item !== trimmed);
+      history.unshift(trimmed);
+      if (history.length > 20) history = history.slice(0, 20);
+      saveListStorage(STORAGE_KEYS.HISTORY, history);
+      renderHistoryList();
+    }
+
+    function removeFromHistory(itemToRemove) {
+      const history = getListStorage(STORAGE_KEYS.HISTORY).filter((i) => i !== itemToRemove);
+      saveListStorage(STORAGE_KEYS.HISTORY, history);
+      renderHistoryList();
+    }
+
+    function clearHistory() {
+      saveListStorage(STORAGE_KEYS.HISTORY, []);
+      renderHistoryList();
+    }
+
+    function isFavorite(query) {
+      if (!query) return false;
+      const favs = getListStorage(STORAGE_KEYS.FAVORITES);
+      return favs.includes(query.trim());
+    }
+
+    function toggleFavorite(query) {
+      const trimmed = (query || '').trim();
+      if (!trimmed) return;
+      let favs = getListStorage(STORAGE_KEYS.FAVORITES);
+      if (favs.includes(trimmed)) {
+        favs = favs.filter((item) => item !== trimmed);
+        showMessage(`"${trimmed}" dihapus dari favorit.`, 'info');
+      } else {
+        favs.unshift(trimmed);
+        showMessage(`"${trimmed}" ditambahkan ke favorit.`, 'success');
+      }
+      saveListStorage(STORAGE_KEYS.FAVORITES, favs);
+      renderFavoritesList();
+      updateFavoriteButtonState(trimmed);
+    }
+
+    function removeFromFavorites(itemToRemove) {
+      const favs = getListStorage(STORAGE_KEYS.FAVORITES).filter((i) => i !== itemToRemove);
+      saveListStorage(STORAGE_KEYS.FAVORITES, favs);
+      renderFavoritesList();
+      if (currentAnalysisData && currentAnalysisData._query === itemToRemove) {
+        updateFavoriteButtonState(itemToRemove);
+      }
+    }
+
+    function clearFavorites() {
+      saveListStorage(STORAGE_KEYS.FAVORITES, []);
+      renderFavoritesList();
+      if (currentAnalysisData) {
+        updateFavoriteButtonState(currentAnalysisData._query);
+      }
+    }
+
+    // =========================================================================
+    // 4. PEMBENTUK TASHRIF LENGKAP (14 DHAMIR, ISIM, DAN FI'IL)
+    // =========================================================================
+
+    /**
+     * Menghasilkan tabel tashrif 14 dhamir standar untuk fi'il tsulatsi mujarrad/umum
+     * berdasarkan pola madhi, mudhari' marfu', dan amr yang diberikan.
+     * Jika tidak pasti, mengembalikan struktur yang tetap informatif dan jujur.
+     */
+    function build14DhamirRows(tashrifObj = {}) {
+      const dhamirList = [
+        { key: 'huwa', label: 'هُوَ (dia lk)' },
+        { key: 'huma_m', label: 'هُمَا (mereka berdua lk)' },
+        { key: 'hum', label: 'هُمْ (mereka jamak lk)' },
+        { key: 'hiya', label: 'هِيَ (dia pr)' },
+        { key: 'huma_f', label: 'هُمَا (mereka berdua pr)' },
+        { key: 'hunna', label: 'هُنَّ (mereka jamak pr)' },
+        { key: 'anta', label: 'أَنْتَ (kamu lk)' },
+        { key: 'antuma_m', label: 'أَنْتُمَا (kalian berdua lk)' },
+        { key: 'antum', label: 'أَنْتُمْ (kalian jamak lk)' },
+        { key: 'anti', label: 'أَنْتِ (kamu pr)' },
+        { key: 'antuma_f', label: 'أَنْتُمَا (kalian berdua pr)' },
+        { key: 'antunna', label: 'أَنْتُنَّ (kalian jamak pr)' },
+        { key: 'ana', label: 'أَنَا (saya)' },
+        { key: 'nahnu', label: 'نَحْنُ (kami/kita)' }
+      ];
+
+      // Jika tashrif 14 dhamir sudah disediakan langsung dari API/kamus
+      const provided = tashrifObj.dhamir14;
+      if (Array.isArray(provided) && provided.length > 0) {
+        return provided.map((row, idx) => ({
+          dhamir: row.dhamir || dhamirList[idx]?.label || '-',
+          madhi: row.madhi || '-',
+          mudhari_marfu: row.mudhari_marfu || row.mudhari || '-',
+          mudhari_manshub: row.mudhari_manshub || '-',
+          mudhari_majzum: row.mudhari_majzum || '-',
+          amr: row.amr || '-'
+        }));
+      }
+
+      // Derivasi kaidah umum jika hanya tersedia bentuk dasar
+      const madhiBase = stripDiacritics(tashrifObj.madhi || '');
+      const mudhariBase = tashrifObj.mudhari || '';
+      const amrBase = tashrifObj.amr || '';
+
+      // Contoh derivasi akurat untuk pola tsulatsi shahih umum (misal: كَتَبَ / يَكْتُبُ / اكْتُبْ)
+      if (/^[\u0621-\u064A]{3}$/.test(madhiBase) && madhiBase.length === 3) {
+        const f = madhiBase[0];
+        const a = madhiBase[1];
+        const l = madhiBase[2];
+
+        // Deteksi vokal 'ain fi'il pada mudhari' jika ada
+        let ainVowelMudhari = '\u064F'; // default dhammah
+        const cleanMudh = stripDiacritics(mudhariBase);
+        if (cleanMudh.length >= 3) {
+          // Cari harakat setelah huruf ke-2 akar pada mudhari'
+          const idx = mudhariBase.indexOf(a);
+          if (idx !== -1 && mudhariBase[idx + 1] && /[\u064E\u0650\u064F]/.test(mudhariBase[idx + 1])) {
+            ainVowelMudhari = mudhariBase[idx + 1];
+          }
+        }
+
+        // Deteksi harakat 'ain fi'il pada madhi
+        let ainVowelMadhi = '\u064E';
+        const mIdx = (tashrifObj.madhi || '').indexOf(a);
+        if (mIdx !== -1 && tashrifObj.madhi[mIdx + 1] && /[\u064E\u0650\u064F]/.test(tashrifObj.madhi[mIdx + 1])) {
+          ainVowelMadhi = tashrifObj.madhi[mIdx + 1];
+        }
+
+        // Deteksi alif washal amr (اِ atau اُ)
+        let amrPrefix = 'اُ';
+        if (amrBase && stripDiacritics(amrBase).startsWith('ا')) {
+          amrPrefix = amrBase.startsWith('اِ') ? 'اِ' : (ainVowelMudhari === '\u064F' ? 'اُ' : 'اِ');
+        } else {
+          amrPrefix = ainVowelMudhari === '\u064F' ? 'اُ' : 'اِ';
+        }
+
+        const madhiHuwa = `${f}${ainVowelMadhi}${a}\u064E${l}\u064E`;
+        const mudhHuwa = `ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064F`;
+        const mudhManshubHuwa = `لَنْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064E`;
+        const mudhMajzumHuwa = `لَمْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652`;
+        const amrAnta = `${amrPrefix}${f}\u0652${a}${ainVowelMudhari}${l}\u0652`;
+
+        return [
+          { dhamir: 'هُوَ', madhi: madhiHuwa, mudhari_marfu: mudhHuwa, mudhari_manshub: mudhManshubHuwa, mudhari_majzum: mudhMajzumHuwa, amr: '— (khusus mukhathab)' },
+          { dhamir: 'هُمَا (lk)', madhi: `${madhiHuwa}ا`, mudhari_marfu: `ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eانِ`, mudhari_manshub: `لَنْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, mudhari_majzum: `لَمْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, amr: '—' },
+          { dhamir: 'هُمْ', madhi: `${f}${ainVowelMadhi}${a}\u064E${l}\u064Fوا`, mudhari_marfu: `ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Fونَ`, mudhari_manshub: `لَنْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Fوا`, mudhari_majzum: `لَمْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Fوا`, amr: '—' },
+          { dhamir: 'هِيَ', madhi: `${madhiHuwa}تْ`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064F`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064E`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652`, amr: '—' },
+          { dhamir: 'هُمَا (pr)', madhi: `${madhiHuwa}تَا`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eانِ`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, amr: '—' },
+          { dhamir: 'هُنَّ', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652نَ`, mudhari_marfu: `ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ`, mudhari_manshub: `لَنْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ`, mudhari_majzum: `لَمْ ي\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ`, amr: '—' },
+          { dhamir: 'أَنْتَ', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تَ`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064F`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064E`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652`, amr: amrAnta },
+          { dhamir: 'أَنْتُمَا (lk)', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تُمَا`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eانِ`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, amr: `${amrPrefix}${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا` },
+          { dhamir: 'أَنْتُمْ', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تُمْ`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Fونَ`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Fوا`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Fوا`, amr: `${amrPrefix}${f}\u0652${a}${ainVowelMudhari}${l}\u064Fوا` },
+          { dhamir: 'أَنْتِ', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تِ`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0650ينَ`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0650ي`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0650ي`, amr: `${amrPrefix}${f}\u0652${a}${ainVowelMudhari}${l}\u0650ي` },
+          { dhamir: 'أَنْتُمَا (pr)', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تُمَا`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eانِ`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا`, amr: `${amrPrefix}${f}\u0652${a}${ainVowelMudhari}${l}\u064Eا` },
+          { dhamir: 'أَنْتُنَّ', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تُنَّ`, mudhari_marfu: `ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ`, mudhari_manshub: `لَنْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ`, mudhari_majzum: `لَمْ ت\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ`, amr: `${amrPrefix}${f}\u0652${a}${ainVowelMudhari}${l}\u0652نَ` },
+          { dhamir: 'أَنَا', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652تُ`, mudhari_marfu: `أ\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064F`, mudhari_manshub: `لَنْ أ\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064E`, mudhari_majzum: `لَمْ أ\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652`, amr: '—' },
+          { dhamir: 'نَحْنُ', madhi: `${f}${ainVowelMadhi}${a}\u0652${l}\u0652نَا`, mudhari_marfu: `ن\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064F`, mudhari_manshub: `لَنْ ن\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u064E`, mudhari_majzum: `لَمْ ن\u064E${f}\u0652${a}${ainVowelMudhari}${l}\u0652`, amr: '—' }
+        ];
+      }
+
+      return dhamirList.map((d) => ({
+        dhamir: d.label,
+        madhi: 'ada perbedaan pendapat / lihat tashrif utama',
+        mudhari_marfu: 'ada perbedaan pendapat / lihat tashrif utama',
+        mudhari_manshub: '-',
+        mudhari_majzum: '-',
+        amr: '-'
+      }));
+    }
+
+    /**
+     * Membangun baris tashrif Isim (Mufrad, Mutsanna, Jamak) dalam 3 keadaan i'rab
+     * (Rafa', Nashab, Jar) bila data spesifik tersedia atau memakai pola umum.
+     */
+    function buildIsimTashrifRows(data) {
+      const tashrif = data.tashrif || {};
+      if (Array.isArray(tashrif.isim_irab) && tashrif.isim_irab.length > 0) {
+        return tashrif.isim_irab;
+      }
+
+      const baseNoTanwin = stripDiacritics(data.harakat || data.kata || '')
+        .replace(/^ال/, '')
+        .replace(/ة$/, '');
+
+      if (!baseNoTanwin) return [];
+
+      const isMuannatsTa = (data.harakat || '').includes('ة') || /muannats/i.test(data.subjenis || '');
+      const stem = isMuannatsTa ? `${baseNoTanwin}ت` : baseNoTanwin;
+
+      return [
+        {
+          bentuk: 'Mufrad (Tunggal)',
+          rafa: isMuannatsTa ? `${baseNoTanwin}َةٌ` : `${baseNoTanwin}ٌ`,
+          nashab: isMuannatsTa ? `${baseNoTanwin}َةً` : `${baseNoTanwin}ًا`,
+          jar: isMuannatsTa ? `${baseNoTanwin}َةٍ` : `${baseNoTanwin}ٍ`
+        },
+        {
+          bentuk: 'Mutsanna (Ganda / Dua)',
+          rafa: `${stem}\u064Eانِ`,
+          nashab: `${stem}\u064Eيْنِ`,
+          jar: `${stem}\u064Eيْنِ`
+        },
+        {
+          bentuk: isMuannatsTa ? 'Jamak Muannats Salim' : 'Jamak Mudzakkar Salim (jika berakal)',
+          rafa: isMuannatsTa ? `${baseNoTanwin}\u064Eاتٌ` : `${baseNoTanwin}\u064Fونَ`,
+          nashab: isMuannatsTa ? `${baseNoTanwin}\u064Eاتٍ` : `${baseNoTanwin}\u0650ينَ`,
+          jar: isMuannatsTa ? `${baseNoTanwin}\u064Eاتٍ` : `${baseNoTanwin}\u0650ينَ`
+        },
+        {
+          bentuk: 'Jamak Taksir / Catatan',
+          rafa: tashrif.jamak_taksir || 'Lihat kamus / ada perbedaan pendapat',
+          nashab: 'Sesuai pola jamak taksir (fathah / kasrah)',
+          jar: 'Sesuai pola jamak taksir (kasrah / fathah bila ghairu munsharif)'
+        }
+      ];
+    }
+
+    // =========================================================================
+    // 5. PENCARIAN KAMUS LOKAL & PEMANGGILAN GEMINI API
+    // =========================================================================
+
+    /**
+     * Memuat kamus lokal dari elemen JSON bawaan (setara data/kamus.json).
+     */
+    function loadLocalDictionary() {
+      try {
+        const raw = document.getElementById('local-dictionary-json')?.textContent || '[]';
+        const parsed = JSON.parse(raw);
+        localDictionary = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        localDictionary = [];
+        showMessage('Gagal memuat kamus lokal bawaan.', 'error');
+      }
+    }
+
+    /**
+     * Mencari padanan kata pada kamus lokal berdasarkan input Arab atau Indonesia/Latin.
+     * @param {string} rawQuery
+     * @returns {object | null}
+     */
+    function searchLocalDictionary(rawQuery) {
+      if (!localDictionary.length || !rawQuery) return null;
+
+      let candidateArabic = rawQuery.trim();
+      const lower = rawQuery.trim().toLowerCase();
+
+      // Jika input tidak mengandung huruf Arab, cek kamus padanan Indonesia/Latin
+      if (!containsArabic(rawQuery)) {
+        if (ID_TO_AR_HINTS[lower]) {
+          candidateArabic = ID_TO_AR_HINTS[lower];
+        } else {
+          // Cari kecocokan pada arti bahasa Indonesia atau latin di kamus lokal
+          const matchByMeaning = localDictionary.find((entry) => {
+            const idText = (entry.id || '').toLowerCase();
+            const latText = (entry.latin || '').toLowerCase();
+            return idText.includes(lower) || latText === lower;
+          });
+          if (!matchByMeaning) return null;
+          candidateArabic = matchByMeaning.ar;
+        }
+      }
+
+      const normTarget = normalizeArabic(candidateArabic);
+
+      const found = localDictionary.find((entry) => {
+        const normAr = normalizeArabic(entry.ar || '');
+        const normGundul = normalizeArabic(entry.gundul || '');
+        return normAr === normTarget || normGundul === normTarget || normAr.includes(normTarget);
+      });
+
+      if (!found) return null;
+
+      const isFiil = (found.jenis || '').toLowerCase().includes("fi'il") || (found.jenis || '').toLowerCase().includes('fiil');
+
+      return {
+        mode: 'kata',
+        _source: 'Kamus Lokal (data/kamus.json)',
+        _query: rawQuery.trim(),
+        kata: found.gundul || stripDiacritics(found.ar),
+        harakat: found.ar,
+        jenis: found.jenis,
+        subjenis: found.subjenis,
+        jidzr: found.jidzr,
+        wazan: found.wazan,
+        bina: found.bina,
+        bab_fiil: isFiil ? (found.wazan || 'Lihat bab sharaf') : 'Bukan fi\'il',
+        makna: [
+          {
+            arti: found.id,
+            catatan: found.latin ? `Transliterasi: ${found.latin}` : '',
+            contoh_ar: found.contoh_ar || '',
+            contoh_id: found.contoh_id || ''
+          }
+        ],
+        tashrif: isFiil
+          ? {
+              madhi: found.ar,
+              mudhari: 'Lihat bab / ada perbedaan pendapat',
+              amr: 'Lihat bab / ada perbedaan pendapat',
+              nahi: 'Lihat bab / ada perbedaan pendapat',
+              isim_fail: 'Lihat wazan / ada perbedaan pendapat',
+              isim_maf'ul: 'Lihat wazan / ada perbedaan pendapat',
+              mashdar: 'Lihat wazan / ada perbedaan pendapat',
+              isim_zaman_makan: 'Lihat wazan / ada perbedaan pendapat',
+              isim_alat: 'Jika muta\'addi / tidak ada',
+              dhamir14: build14DhamirRows({ madhi: found.ar })
+            }
+          : {
+              mufrad: found.ar,
+              mutsanna: 'Lihat tabel i\'rab isim',
+              jamak: 'Lihat tabel i\'rab isim',
+              gender: (found.subjenis || '').toLowerCase().includes('muannats') ? 'Muannats' : 'Mudzakkar',
+              isim_irab: buildIsimTashrifRows({
+                kata: found.gundul,
+                harakat: found.ar,
+                subjenis: found.subjenis
+              })
+            },
+        seakar: Array.isArray(found.seakar) ? found.seakar : []
+      };
+    }
+
+    /**
+     * Memanggil Gemini API dengan backoff eksponensial dan meminta output JSON ketat.
+     * @param {string} userInput
+     * @param {'kata' | 'kalimat'} mode
+     * @param {string} apiKey
+     * @returns {Promise<object>}
+     */
+    async function analyzeWithGemini(userInput, mode, apiKey) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+      const prompt =
+        mode === 'kalimat'
+          ? `Analisis KALIMAT bahasa Arab berikut secara menyeluruh berdasarkan kaidah nahwu dan sharaf: "${userInput}".
+Jika input berbahasa Indonesia/Latin, terjemahkan dulu ke kalimat Arab yang baku lalu analisis.
+Balas HANYA dalam JSON valid sesuai skema berikut (tanpa markdown \`\`\`json):
+{
+  "mode": "kalimat",
+  "kata": "teks kalimat input",
+  "harakat_kalimat": "kalimat Arab berharakat lengkap",
+  "terjemahan_id": "terjemahan bahasa Indonesia yang tepat",
+  "jenis_kalimat": "Jumlah Ismiyyah / Jumlah Fi'liyyah / dst",
+  "jumlah_bermahal": ["daftar jumlah yang memiliki mahal i'rab, misal jumlah khabar atau jumlah hal"],
+  "penjelasan_sederhana": "penjelasan ringkas dalam bahasa Indonesia yang mudah dipahami",
+  "irab_kata": [
+    {
+      "kata": "kata berharakat",
+      "jenis": "Isim / Fi'il / Harf + subjenis",
+      "kedudukan": "fa'il / maf'ul bih / mubtada' / khabar / na't / mudhaf ilaih / hal / tamyiz / dll",
+      "tanda_irab": "Rafa' / Nashab / Jar / Jazm / Mabni",
+      "alasan_irab": "dhammah / fathah / kasrah / alif / ya / wawu / sukun / dll",
+      "mahal_irab": "keterangan mahal i'rab bila mabni atau kosong jika mu'rab",
+      "kemungkinan_lain": "jika ada khilaf / kemungkinan i'rab lain menurut ulama nahwu, tulis di sini; jika tidak ada, tulis ''"
+    }
+  ],
+  "catatan_khilaf": "catatan bila ada lebih dari satu kemungkinan i'rab atau perbedaan pendapat ulama nahwu"
+}`
+          : `Analisis SATU KATA berikut berdasarkan kaidah nahwu dan sharaf: "${userInput}".
+Jika input berupa kata Indonesia atau Latin, tentukan padanan kata Arab yang paling umum lalu analisis.
+Balas HANYA dalam JSON valid sesuai skema berikut (tanpa markdown \`\`\`json):
+{
+  "mode": "kata",
+  "kata": "kata Arab gundul",
+  "harakat": "kata Arab berharakat lengkap",
+  "jenis": "Isim / Fi'il / Harf",
+  "subjenis": "subjenis (misal: Isim Fa'il, Mashdar, Fi'il Mudhari' Majzum, Harf Jar, dll)",
+  "jidzr": "akar kata misal ك - ت - ب atau 'Tidak ada'",
+  "wazan": "wazan/timbangan",
+  "bina": "Shahih Salim / Mudha'af / Mahmuz / Mithal / Ajwaf / Naqish / Lafif / Harf",
+  "bab_fiil": "Bab 1-6 Tsulatsi Mujarrad atau Mazid & wazannya (atau 'Bukan fi'il')",
+  "makna": [
+    {
+      "arti": "arti bahasa Indonesia",
+      "catatan": "nuansa/konteks penggunaan",
+      "contoh_ar": "contoh kalimat Arab berharakat",
+      "contoh_id": "terjemahan contoh kalimat"
+    }
+  ],
+  "tashrif": {
+    "madhi": "bentuk madhi",
+    "mudhari": "bentuk mudhari'",
+    "amr": "bentuk amr",
+    "nahi": "bentuk nahi",
+    "isim_fail": "isim fa'il",
+    "isim_maf'ul": "isim maf'ul",
+    "mashdar": "mashdar",
+    "isim_zaman_makan": "isim zaman / makan",
+    "isim_alat": "isim alat (jika ada)",
+    "mufrad": "bentuk mufrad (jika isim)",
+    "mutsanna": "bentuk mutsanna (jika isim)",
+    "jamak": "bentuk jamak salim & taksir (jika isim)",
+    "gender": "Mudzakkar / Muannats / Keduanya",
+    "isim_irab": [
+      { "bentuk": "Mufrad", "rafa": "...", "nashab": "...", "jar": "..." },
+      { "bentuk": "Mutsanna", "rafa": "...", "nashab": "...", "jar": "..." },
+      { "bentuk": "Jamak", "rafa": "...", "nashab": "...", "jar": "..." }
+    ],
+    "dhamir14": [
+      { "dhamir": "هُوَ", "madhi": "...", "mudhari_marfu": "...", "mudhari_manshub": "...", "mudhari_majzum": "...", "amr": "—" }
+    ]
+  },
+  "seakar": ["kata seakar 1", "kata seakar 2"]
+}`;
+
+      const payload = {
+        systemInstruction: {
+          parts: [{ text: SYSTEM_INSTRUCTION }]
+        },
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.2
+        }
+      };
+
+      const maxRetries = 3;
+      let lastError = null;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errText}`);
+          }
+
+          const result = await response.json();
+          const rawText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (!rawText) {
+            throw new Error('Respons Gemini kosong atau tidak sesuai struktur.');
+          }
+
+          // Bersihkan kemungkinan pembungkus markdown ```json ... ```
+          const cleanedJsonText = rawText
+            .replace(/^```json\s*/i, '')
+            .replace(/^```\s*/i, '')
+            .replace(/\s*```$/i, '')
+            .trim();
+
+          const parsed = JSON.parse(cleanedJsonText);
+          parsed.mode = mode;
+          parsed._source = 'Gemini API (gemini-3-flash-preview)';
+          parsed._query = userInput.trim();
+          return parsed;
+        } catch (err) {
+          lastError = err;
+          if (attempt < maxRetries) {
+            const delayMs = Math.pow(2, attempt) * 1000;
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
+        }
+      }
+
+      throw lastError || new Error('Gagal menghubungi Gemini API.');
+    }
+
+    // =========================================================================
+    // 6. RENDERING HASIL SATU KATA & SATU KALIMAT KE DOM
+    // =========================================================================
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderWordResult(data) {
+      const container = document.getElementById('word-result');
+      const sentenceContainer = document.getElementById('sentence-result');
+      sentenceContainer.classList.add('hidden');
+      container.classList.remove('hidden');
+
+      const harakatText = data.harakat || data.kata || '-';
+      const maknaList = Array.isArray(data.makna) ? data.makna : [];
+      const seakarList = Array.isArray(data.seakar) ? data.seakar : [];
+      const tashrif = data.tashrif || {};
+      const isFiil = (data.jenis || '').toLowerCase().includes("fi'il") || (data.jenis || '').toLowerCase().includes('fiil');
+      const dhamirRows = build14DhamirRows(tashrif);
+      const isimIrabRows = buildIsimTashrifRows(data);
+
+      currentSpeakText = harakatText;
+
+      const maknaHtml = maknaList.length
+        ? maknaList
+            .map(
+              (m, idx) => `
+              <div class="p-4 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800 space-y-2 print-break-inside-avoid">
+                <div class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    ${idx + 1}
+                  </span>
+                  <div class="space-y-1 flex-1">
+                    <p class="font-semibold text-slate-900 dark:text-white text-base">${escapeHtml(m.arti || '-')}</p>
+                    ${m.catatan ? `<p class="text-xs text-slate-500 dark:text-slate-400">${escapeHtml(m.catatan)}</p>` : ''}
+                  </div>
+                </div>
+                ${
+                  m.contoh_ar
+                    ? `<div class="pt-2 mt-2 border-t border-stone-200/80 dark:border-slate-800 space-y-1">
+                        <p class="arabic-sm text-emerald-900 dark:text-emerald-200 font-medium">${escapeHtml(m.contoh_ar)}</p>
+                        ${m.contoh_id ? `<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">“${escapeHtml(m.contoh_id)}”</p>` : ''}
+                      </div>`
+                    : ''
+                }
+              </div>`
+            )
+            .join('')
+        : `<p class="text-sm text-slate-500">Belum ada rincian makna.</p>`;
+
+      const seakarHtml = seakarList.length
+        ? seakarList
+            .map(
+              (item) => `
+              <button
+                type="button"
+                data-root-click="${escapeHtml(stripDiacritics(item))}"
+                class="root-chip px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 transition arabic-sm font-medium"
+                title="Klik untuk menganalisis kata seakar ini"
+              >
+                ${escapeHtml(item)}
+              </button>`
+            )
+            .join('')
+        : `<p class="text-xs text-slate-500">Tidak ada daftar kata seakar atau tidak berlaku (harf).</p>`;
+
+      container.innerHTML = `
+        <!-- Kartu Utama: Harakat, Jenis, Akar Kata, Wazan, Bina & Bab -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 sm:p-7 space-y-6 shadow-sm">
+          <div class="text-center space-y-2 pb-5 border-b border-stone-100 dark:border-slate-800">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              ${escapeHtml(data.jenis || 'Tidak diketahui')} • ${escapeHtml(data.subjenis || '-')}
+            </span>
+            <div class="arabic-text font-bold text-slate-900 dark:text-white py-2">
+              ${escapeHtml(harakatText)}
+            </div>
+            ${
+              data.kata && stripDiacritics(data.kata) !== stripDiacritics(harakatText)
+                ? `<p class="text-xs text-slate-500">Bentuk input: <span class="arabic-sm">${escapeHtml(data.kata)}</span></p>`
+                : ''
+            }
+          </div>
+
+          <!-- Grid Metadata Sharaf -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Akar Kata (Jidzr)</p>
+              <p class="mt-1 text-base font-bold text-slate-900 dark:text-white arabic-sm">${escapeHtml(data.jidzr || '-')}</p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Wazan</p>
+              <p class="mt-1 text-base font-bold text-slate-900 dark:text-white arabic-sm">${escapeHtml(data.wazan || '-')}</p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Bina</p>
+              <p class="mt-1 text-sm sm:text-base font-bold text-slate-900 dark:text-white">${escapeHtml(data.bina || '-')}</p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Bab Fi'il</p>
+              <p class="mt-1 text-sm sm:text-base font-bold text-slate-900 dark:text-white">${escapeHtml(data.bab_fiil || (isFiil ? 'Lihat wazan' : 'Bukan fi\'il'))}</p>
+            </div>
+          </div>
+
+          <!-- Arti & Contoh Kalimat -->
+          <div class="space-y-3">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">
+              Makna &amp; Contoh Kalimat
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              ${maknaHtml}
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Tashrif Lengkap -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 sm:p-7 space-y-5 shadow-sm print-break-inside-avoid">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+              Tashrif Lengkap
+            </h3>
+            <span class="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 font-medium">
+              ${escapeHtml(data.bab_fiil || data.jenis || 'Analisis Sharaf')}
+            </span>
+          </div>
+
+          <!-- Ringkasan Shighah / Bentuk Turunan -->
+          <div class="overflow-x-auto table-scroll rounded-2xl border border-stone-200 dark:border-slate-800">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-stone-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200">
+                <tr>
+                  <th class="py-3 px-4 font-semibold">Bentuk / Shighah</th>
+                  <th class="py-3 px-4 font-semibold">Lafadz Arab</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-200 dark:divide-slate-800">
+                ${
+                  isFiil
+                    ? `
+                    <tr><td class="py-2.5 px-4 font-medium">Fi'il Madhi</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.madhi || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Fi'il Mudhari'</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.mudhari || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Fi'il Amr</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.amr || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Fi'il Nahi</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.nahi || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Isim Fa'il</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.isim_fail || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Isim Maf'ul</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif['isim_maf\'ul'] || tashrif.isim_maful || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Mashdar</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.mashdar || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Isim Zaman / Makan</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.isim_zaman_makan || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Isim Alat</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.isim_alat || '-')}</td></tr>
+                  `
+                    : `
+                    <tr><td class="py-2.5 px-4 font-medium">Mufrad</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.mufrad || harakatText)}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Mutsanna</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.mutsanna || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Jamak (Salim / Taksir)</td><td class="py-2.5 px-4 arabic-sm">${escapeHtml(tashrif.jamak || '-')}</td></tr>
+                    <tr><td class="py-2.5 px-4 font-medium">Jenis Kelamin (Gender)</td><td class="py-2.5 px-4">${escapeHtml(tashrif.gender || '-')}</td></tr>
+                  `
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tabel Tashrif Isim dalam 3 Keadaan I'rab (Rafa', Nashab, Jar) -->
+          ${
+            !isFiil && isimIrabRows.length
+              ? `
+              <div class="space-y-2 pt-2">
+                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  Perubahan Isim dalam Tiga Keadaan I'rab (Rafa', Nashab, Jar)
+                </h4>
+                <div class="overflow-x-auto table-scroll rounded-2xl border border-stone-200 dark:border-slate-800">
+                  <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-200">
+                      <tr>
+                        <th class="py-3 px-4 font-semibold">Bentuk</th>
+                        <th class="py-3 px-4 font-semibold">Rafa'</th>
+                        <th class="py-3 px-4 font-semibold">Nashab</th>
+                        <th class="py-3 px-4 font-semibold">Jar</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-200 dark:divide-slate-800">
+                      ${isimIrabRows
+                        .map(
+                          (r) => `
+                          <tr>
+                            <td class="py-2.5 px-4 font-medium">${escapeHtml(r.bentuk || '-')}</td>
+                            <td class="py-2.5 px-4 arabic-sm">${escapeHtml(r.rafa || '-')}</td>
+                            <td class="py-2.5 px-4 arabic-sm">${escapeHtml(r.nashab || '-')}</td>
+                            <td class="py-2.5 px-4 arabic-sm">${escapeHtml(r.jar || '-')}</td>
+                          </tr>`
+                        )
+                        .join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>`
+              : ''
+          }
+
+          <!-- Tabel Tashrif 14 Dhamir untuk Fi'il -->
+          ${
+            isFiil
+              ? `
+              <div class="space-y-2 pt-2">
+                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  Tashrif 14 Dhamir (Madhi, Mudhari' Marfu', Manshub, Majzum &amp; Amr)
+                </h4>
+                <div class="overflow-x-auto table-scroll rounded-2xl border border-stone-200 dark:border-slate-800">
+                  <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-200">
+                      <tr>
+                        <th class="py-3 px-3 font-semibold">Dhamir</th>
+                        <th class="py-3 px-3 font-semibold">Madhi</th>
+                        <th class="py-3 px-3 font-semibold">Mudhari' Marfu'</th>
+                        <th class="py-3 px-3 font-semibold">Mudhari' Manshub</th>
+                        <th class="py-3 px-3 font-semibold">Mudhari' Majzum</th>
+                        <th class="py-3 px-3 font-semibold">Amr</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-200 dark:divide-slate-800">
+                      ${dhamirRows
+                        .map(
+                          (row) => `
+                          <tr>
+                            <td class="py-2.5 px-3 font-semibold whitespace-nowrap arabic-sm">${escapeHtml(row.dhamir)}</td>
+                            <td class="py-2.5 px-3 arabic-sm">${escapeHtml(row.madhi)}</td>
+                            <td class="py-2.5 px-3 arabic-sm">${escapeHtml(row.mudhari_marfu)}</td>
+                            <td class="py-2.5 px-3 arabic-sm">${escapeHtml(row.mudhari_manshub)}</td>
+                            <td class="py-2.5 px-3 arabic-sm">${escapeHtml(row.mudhari_majzum)}</td>
+                            <td class="py-2.5 px-3 arabic-sm">${escapeHtml(row.amr)}</td>
+                          </tr>`
+                        )
+                        .join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>`
+              : ''
+          }
+        </div>
+
+        <!-- Kata-kata Seakar -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 sm:p-6 space-y-3 shadow-sm print-break-inside-avoid">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">
+            Kata-kata Seakar yang Umum Dipakai
+          </h3>
+          <div class="flex flex-wrap gap-2.5">
+            ${seakarHtml}
+          </div>
+        </div>
+      `;
+
+      // Pasang listener klik pada kata-kata seakar
+      container.querySelectorAll('.root-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const targetWord = btn.getAttribute('data-root-click');
+          if (targetWord) {
+            document.getElementById('search-input').value = targetWord;
+            runSearch(targetWord);
+          }
+        });
+      });
+    }
+
+    function renderSentenceResult(data) {
+      const wordContainer = document.getElementById('word-result');
+      const container = document.getElementById('sentence-result');
+      wordContainer.classList.add('hidden');
+      container.classList.remove('hidden');
+
+      const harakatKalimat = data.harakat_kalimat || data.kata || '-';
+      const terjemahan = data.terjemahan_id || '-';
+      const jenisKalimat = data.jenis_kalimat || '-';
+      const jumlahBermahal = Array.isArray(data.jumlah_bermahal) ? data.jumlah_bermahal : [];
+      const irabKata = Array.isArray(data.irab_kata) ? data.irab_kata : [];
+      const penjelasan = data.penjelasan_sederhana || 'Tidak ada penjelasan tambahan.';
+      const catatanKhilaf = data.catatan_khilaf || '';
+
+      currentSpeakText = harakatKalimat;
+
+      const irabRowsHtml = irabKata.length
+        ? irabKata
+            .map((item) => {
+              const hasAlt = Boolean(item.kemungkinan_lain && item.kemungkinan_lain.trim() !== '' && item.kemungkinan_lain.trim() !== '-');
+              return `
+                <tr class="${hasAlt ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}">
+                  <td class="py-3 px-3.5 arabic-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                    ${escapeHtml(item.kata || '-')}
+                  </td>
+                  <td class="py-3 px-3.5 text-xs sm:text-sm">${escapeHtml(item.jenis || '-')}</td>
+                  <td class="py-3 px-3.5 text-xs sm:text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                    ${escapeHtml(item.kedudukan || '-')}
+                    ${
+                      hasAlt
+                        ? `<div class="mt-1"><span class="inline-block px-2 py-0.5 rounded-full text-[11px] bg-amber-200/80 text-amber-950 dark:bg-amber-900 dark:text-amber-200 font-semibold">Khilaf / Alternatif I'rab</span><p class="text-xs text-amber-900 dark:text-amber-200 mt-0.5">${escapeHtml(item.kemungkinan_lain)}</p></div>`
+                        : ''
+                    }
+                  </td>
+                  <td class="py-3 px-3.5 text-xs sm:text-sm">${escapeHtml(item.tanda_irab || '-')}</td>
+                  <td class="py-3 px-3.5 text-xs sm:text-sm">${escapeHtml(item.alasan_irab || '-')}</td>
+                  <td class="py-3 px-3.5 text-xs sm:text-sm">${escapeHtml(item.mahal_irab || '-')}</td>
+                </tr>`;
+            })
+            .join('')
+        : `<tr><td colspan="6" class="py-4 px-4 text-center text-slate-500">Rincian i'rab kata belum tersedia.</td></tr>`;
+
+      container.innerHTML = `
+        <!-- Kartu Utama Kalimat: Harakat Lengkap, Terjemahan & Jenis Jumlah -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 sm:p-7 space-y-5 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              ${escapeHtml(jenisKalimat)}
+            </span>
+            <span class="text-xs text-slate-500 dark:text-slate-400">
+              Jumlah kata: ${irabKata.length || '-'}
+            </span>
+          </div>
+
+          <div class="p-4 sm:p-6 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800 text-center space-y-3">
+            <p class="arabic-text font-bold text-slate-900 dark:text-white">
+              ${escapeHtml(harakatKalimat)}
+            </p>
+            <p class="text-base sm:text-lg font-medium text-emerald-900 dark:text-emerald-200">
+              “${escapeHtml(terjemahan)}”
+            </p>
+          </div>
+
+          <!-- Jumlah yang Memiliki Mahal I'rab -->
+          <div class="p-4 rounded-2xl bg-stone-50 dark:bg-slate-950 border border-stone-200 dark:border-slate-800 space-y-1.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Jumlah yang Memiliki Mahal I'rab
+            </h4>
+            ${
+              jumlahBermahal.length
+                ? `<ul class="list-disc list-inside text-sm text-slate-800 dark:text-slate-200 space-y-1">
+                    ${jumlahBermahal.map((j) => `<li>${escapeHtml(j)}</li>`).join('')}
+                   </ul>`
+                : `<p class="text-sm text-slate-600 dark:text-slate-400">Tidak ada jumlah bermahal khusus atau tidak disebutkan.</p>`
+            }
+          </div>
+
+          ${
+            catatanKhilaf
+              ? `<div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 space-y-1">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">
+                    Catatan Kemungkinan I'rab / Perbedaan Pendapat Ulama Nahwu
+                  </h4>
+                  <p class="text-sm text-amber-950 dark:text-amber-100">${escapeHtml(catatanKhilaf)}</p>
+                </div>`
+              : ''
+          }
+        </div>
+
+        <!-- Tabel I'rab Kata per Kata -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 p-5 sm:p-7 space-y-4 shadow-sm print-break-inside-avoid">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">
+            I'rab Kata per Kata
+          </h3>
+
+          <div class="overflow-x-auto table-scroll rounded-2xl border border-stone-200 dark:border-slate-800">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="bg-emerald-50 dark:bg-emerald-950/50 text-emerald-950 dark:text-emerald-200">
+                <tr>
+                  <th class="py-3 px-3.5 font-semibold">Kata</th>
+                  <th class="py-3 px-3.5 font-semibold">Jenis Kata</th>
+                  <th class="py-3 px-3.5 font-semibold">Kedudukan</th>
+                  <th class="py-3 px-3.5 font-semibold">Tanda I'rab</th>
+                  <th class="py-3 px-3.5 font-semibold">Alasan I'rab</th>
+                  <th class="py-3 px-3.5 font-semibold">Mahal I'rab (Mabni)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-stone-200 dark:divide-slate-800">
+                ${irabRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Accordion Penjelasan Ringkas Bahasa Indonesia Sederhana -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-stone-200 dark:border-slate-800 overflow-hidden shadow-sm no-print">
+          <button
+            id="btn-toggle-explanation"
+            type="button"
+            class="w-full px-5 py-4 flex items-center justify-between text-left font-bold text-slate-900 dark:text-white hover:bg-stone-50 dark:hover:bg-slate-800/50 transition"
+            aria-expanded="true"
+            aria-controls="explanation-accordion-body"
+          >
+            <span>💡 Penjelasan Ringkas (Bahasa Indonesia Sederhana)</span>
+            <span id="explanation-chevron" class="text-slate-400">▲</span>
+          </button>
+          <div id="explanation-accordion-body" class="px-5 pb-5 pt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300 border-t border-stone-100 dark:border-slate-800">
+            ${escapeHtml(penjelasan)}
+          </div>
+        </div>
+      `;
+
+      // Pasang listener accordion penjelasan ringkas
+      const accBtn = document.getElementById('btn-toggle-explanation');
+      const accBody = document.getElementById('explanation-accordion-body');
+      const accChevron = document.getElementById('explanation-chevron');
+      if (accBtn && accBody && accChevron) {
+        accBtn.addEventListener('click', () => {
+          const expanded = accBtn.getAttribute('aria-expanded') === 'true';
+          accBtn.setAttribute('aria-expanded', String(!expanded));
+          accBody.classList.toggle('hidden', expanded);
+          accChevron.textContent = expanded ? '▼' : '▲';
+        });
+      }
+    }
+
+    function renderAnalysis(data) {
+      currentAnalysisData = data;
+      const resultContainer = document.getElementById('result-container');
+      resultContainer.classList.remove('hidden');
+
+      document.getElementById('source-badge').textContent = data._source || 'Analisis';
+      document.getElementById('mode-badge').textContent =
+        data.mode === 'kalimat' ? 'Analisis Satu Kalimat' : 'Analisis Satu Kata';
+
+      updateFavoriteButtonState(data._query);
+
+      if (data.mode === 'kalimat') {
+        renderSentenceResult(data);
+      } else {
+        renderWordResult(data);
+      }
+    }
+
+    // =========================================================================
+    // 7. ALUR PENCARIAN UTAMA (CACHE -> KAMUS LOKAL -> GEMINI API)
+    // =========================================================================
+
+    async function runSearch(rawQuery) {
+      const query = (rawQuery || '').trim();
+      hideMessage();
+
+      if (!query) {
+        showMessage('Silakan ketik kata atau kalimat Arab, atau kata bahasa Indonesia terlebih dahulu.', 'error');
+        return;
+      }
+
+      const mode = detectInputMode(query);
+      const cacheKey = `${mode}:${containsArabic(query) ? normalizeArabic(query) : query.toLowerCase()}`;
+
+      setLoading(true, mode === 'kalimat' ? 'Menganalisis struktur kalimat & i\'rab...' : 'Menganalisis kata, wazan & tashrif...');
+
+      try {
+        // 1. Cek cache di localStorage
+        const cache = getCache();
+        if (cache[cacheKey] && cache[cacheKey].data) {
+          const cachedObj = {
+            ...cache[cacheKey].data,
+            _source: 'Cache Lokal',
+            _query: query
+          };
+          addToHistory(query);
+          renderAnalysis(cachedObj);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Cek kamus lokal untuk mode satu kata
+        const localHit = mode === 'kata' ? searchLocalDictionary(query) : null;
+        const apiKey = getApiKey();
+
+        if (localHit && !apiKey) {
+          localHit._query = query;
+          setCacheEntry(cacheKey, localHit);
+          addToHistory(query);
+          renderAnalysis(localHit);
+          setLoading(false);
+          return;
+        }
+
+        // 3. Gunakan Gemini API jika API Key tersedia
+        if (apiKey) {
+          try {
+            const apiData = await analyzeWithGemini(query, mode, apiKey);
+            setCacheEntry(cacheKey, apiData);
+            addToHistory(query);
+            renderAnalysis(apiData);
+            setLoading(false);
+            return;
+          } catch (apiErr) {
+            // Jika API gagal dan ada data kamus lokal, gunakan fallback kamus lokal
+            if (localHit) {
+              localHit._source = 'Kamus Lokal (Fallback API)';
+              localHit._query = query;
+              addToHistory(query);
+              renderAnalysis(localHit);
+              showMessage(
+                `Gagal mengambil analisis lengkap dari API (${apiErr.message}). Menampilkan data dasar dari kamus lokal.`,
+                'error'
+              );
+              setLoading(false);
+              return;
+            }
+            throw apiErr;
+          }
+        }
+
+        // 4. Jika tidak ada API Key dan tidak ditemukan di kamus lokal
+        setLoading(false);
+        showMessage(
+          `Kata atau kalimat "${query}" belum ada di kamus lokal (~100 kata dasar). Silakan masukkan Gemini API Key pada menu "API & Tampilan" di atas untuk menganalisis kata atau kalimat apa pun.`,
+          'info'
+        );
+      } catch (err) {
+        setLoading(false);
+        showMessage(
+          `Terjadi kendala saat memproses data: ${err.message || 'Respons tidak valid'}. Pastikan API Key benar dan koneksi internet aktif.`,
+          'error'
+        );
+      }
+    }
+
+    // =========================================================================
+    // 8. FITUR TAMBAHAN: AUDIO (WEB SPEECH API), SALIN, CETAK, TEMA, KEYBOARD
+    // =========================================================================
+
+    function speakArabic(text) {
+      const target = (text || currentSpeakText || '').trim();
+      if (!target) {
+        showMessage('Tidak ada teks Arab untuk diucapkan.', 'info');
+        return;
+      }
+
+      if (!('speechSynthesis' in window)) {
+        showMessage('Browser Anda tidak mendukung fitur pembacaan suara (Web Speech API).', 'info');
+        return;
+      }
+
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(target);
+        utterance.lang = 'ar-SA';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        showMessage('Gagal memutar pengucapan bahasa Arab.', 'error');
+      }
+    }
+
+    function copyResultText() {
+      if (!currentAnalysisData) return;
+
+      let textToCopy = '';
+      if (currentAnalysisData.mode === 'kalimat') {
+        textToCopy = [
+          `Kalimat: ${currentAnalysisData.harakat_kalimat || ''}`,
+          `Terjemahan: ${currentAnalysisData.terjemahan_id || ''}`,
+          `Jenis: ${currentAnalysisData.jenis_kalimat || ''}`,
+          `Penjelasan: ${currentAnalysisData.penjelasan_sederhana || ''}`
+        ].join('\n');
+      } else {
+        const artiPertama = currentAnalysisData.makna?.[0]?.arti || '';
+        textToCopy = [
+          `Kata: ${currentAnalysisData.harakat || currentAnalysisData.kata || ''}`,
+          `Jenis: ${currentAnalysisData.jenis || ''} (${currentAnalysisData.subjenis || ''})`,
+          `Akar Kata: ${currentAnalysisData.jidzr || ''} | Wazan: ${currentAnalysisData.wazan || ''} | Bina: ${currentAnalysisData.bina || ''}`,
+          `Arti: ${artiPertama}`
+        ].join('\n');
+      }
+
+      const tempArea = document.createElement('textarea');
+      tempArea.value = textToCopy;
+      tempArea.setAttribute('readonly', '');
+      tempArea.style.position = 'fixed';
+      tempArea.style.left = '-9999px';
+      document.body.appendChild(tempArea);
+      tempArea.select();
+
+      try {
+        document.execCommand('copy');
+        const label = document.getElementById('copy-label');
+        if (label) {
+          const prev = label.textContent;
+          label.textContent = 'Tersalin!';
+          setTimeout(() => {
+            label.textContent = prev;
+          }, 1800);
+        }
+      } catch (e) {
+        showMessage('Gagal menyalin teks ke clipboard.', 'error');
+      } finally {
+        document.body.removeChild(tempArea);
+      }
+    }
+
+    function applyTheme(isDark) {
+      const root = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      if (isDark) {
+        root.classList.add('dark');
+        if (icon) icon.textContent = '☀️';
+      } else {
+        root.classList.remove('dark');
+        if (icon) icon.textContent = '🌙';
+      }
+      try {
+        localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+      } catch (e) {
+        // Abaikan error
+      }
+    }
+
+    function applyArabicFontSize(px) {
+      const num = Number(px) || 32;
+      document.documentElement.style.setProperty('--arabic-font-size', `${num}px`);
+      const rangeEl = document.getElementById('font-size-range');
+      const labelEl = document.getElementById('font-size-value');
+      if (rangeEl) rangeEl.value = String(num);
+      if (labelEl) {
+        const desc = num <= 28 ? 'Kecil' : num >= 38 ? 'Besar' : 'Sedang';
+        labelEl.textContent = `${desc} (${num}px)`;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEYS.FONT_SIZE, String(num));
+      } catch (e) {
+        // Abaikan error
+      }
+    }
+
+    function updateApiKeyUi() {
+      const key = getApiKey();
+      const input = document.getElementById('api-key-input');
+      const badge = document.getElementById('api-key-badge');
+      const dot = document.getElementById('api-status-dot');
+
+      if (input && !input.value && key) {
+        input.value = key;
+      }
+
+      if (key) {
+        if (badge) {
+          badge.textContent = 'API Key Aktif';
+          badge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-medium';
+        }
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+      } else {
+        if (badge) {
+          badge.textContent = 'Mode Kamus Lokal';
+          badge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+        }
+        if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500';
+      }
+    }
+
+    function updateFavoriteButtonState(query) {
+      const fav = isFavorite(query);
+      const icon = document.getElementById('favorite-icon');
+      const label = document.getElementById('favorite-label');
+      if (icon) icon.textContent = fav ? '★' : '☆';
+      if (label) label.textContent = fav ? 'Difavoritkan' : 'Favorit';
+    }
+
+    function renderFavoritesList() {
+      const container = document.getElementById('favorites-list');
+      const favs = getListStorage(STORAGE_KEYS.FAVORITES);
+      if (!container) return;
+
+      if (!favs.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400">Belum ada favorit tersimpan.</p>`;
+        return;
+      }
+
+      container.innerHTML = favs
+        .map(
+          (item) => `
+          <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/70 text-xs">
+            <button type="button" data-chip-query="${escapeHtml(item)}" class="chip-search-btn font-medium text-amber-950 dark:text-amber-100 ${containsArabic(item) ? 'arabic-sm' : ''}">
+              ${escapeHtml(item)}
+            </button>
+            <button type="button" data-remove-fav="${escapeHtml(item)}" class="remove-fav-btn text-amber-700 hover:text-rose-600 dark:text-amber-300 font-bold px-1" title="Hapus favorit">
+              ×
+            </button>
+          </div>`
+        )
+        .join('');
+
+      container.querySelectorAll('.chip-search-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const q = btn.getAttribute('data-chip-query');
+          document.getElementById('search-input').value = q;
+          runSearch(q);
+        });
+      });
+
+      container.querySelectorAll('.remove-fav-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          removeFromFavorites(btn.getAttribute('data-remove-fav'));
+        });
+      });
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('history-list');
+      const history = getListStorage(STORAGE_KEYS.HISTORY);
+      if (!container) return;
+
+      if (!history.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400">Belum ada riwayat pencarian.</p>`;
+        return;
+      }
+
+      container.innerHTML = history
+        .map(
+          (item) => `
+          <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-slate-800 border border-stone-200 dark:border-slate-700 text-xs">
+            <button type="button" data-chip-query="${escapeHtml(item)}" class="chip-search-btn font-medium text-slate-800 dark:text-slate-100 ${containsArabic(item) ? 'arabic-sm' : ''}">
+              ${escapeHtml(item)}
+            </button>
+            <button type="button" data-remove-hist="${escapeHtml(item)}" class="remove-hist-btn text-slate-400 hover:text-rose-600 font-bold px-1" title="Hapus dari riwayat">
+              ×
+            </button>
+          </div>`
+        )
+        .join('');
+
+      container.querySelectorAll('.chip-search-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const q = btn.getAttribute('data-chip-query');
+          document.getElementById('search-input').value = q;
+          runSearch(q);
+        });
+      });
+
+      container.querySelectorAll('.remove-hist-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          removeFromHistory(btn.getAttribute('data-remove-hist'));
+        });
+      });
+    }
+
+    function buildVirtualKeyboard() {
+      const harakatRow = document.getElementById('vk-harakat-row');
+      const lettersGrid = document.getElementById('vk-letters-grid');
+      const input = document.getElementById('search-input');
+
+      if (!harakatRow || !lettersGrid || !input) return;
+
+      const insertAtCursor = (char) => {
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        const val = input.value;
+        input.value = val.slice(0, start) + char + val.slice(end);
+        const nextPos = start + char.length;
+        input.focus();
+        input.setSelectionRange(nextPos, nextPos);
+      };
+
+      harakatRow.innerHTML = ARABIC_HARAKAT.map(
+        (h) => `
+          <button
+            type="button"
+            data-char="${escapeHtml(h.mark)}"
+            class="vk-key px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 text-xs font-medium text-slate-800 dark:text-slate-100 transition"
+            title="${escapeHtml(h.label)}"
+          >
+            ${escapeHtml(h.label)}
+          </button>`
+      ).join('');
+
+      lettersGrid.innerHTML = ARABIC_LETTERS.map(
+        (letter) => `
+          <button
+            type="button"
+            data-char="${escapeHtml(letter)}"
+            class="vk-key py-2 rounded-xl bg-stone-50 dark:bg-slate-950 hover:bg-emerald-50 dark:hover:bg-emerald-950 border border-stone-200 dark:border-slate-800 text-xl font-arabic text-slate-900 dark:text-white transition"
+          >
+            ${escapeHtml(letter)}
+          </button>`
+      ).join('');
+
+      document.querySelectorAll('.vk-key').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          insertAtCursor(btn.getAttribute('data-char') || '');
+        });
+      });
+
+      document.getElementById('vk-space')?.addEventListener('click', () => insertAtCursor(' '));
+      document.getElementById('vk-backspace')?.addEventListener('click', () => {
+        const start = input.selectionStart ?? input.value.length;
+        const end = input.selectionEnd ?? input.value.length;
+        const val = input.value;
+        if (start !== end) {
+          input.value = val.slice(0, start) + val.slice(end);
+          input.focus();
+          input.setSelectionRange(start, start);
+        } else if (start > 0) {
+          input.value = val.slice(0, start - 1) + val.slice(end);
+          input.focus();
+          input.setSelectionRange(start - 1, start - 1);
+        }
+      });
+    }
+
+    function setLoading(isLoading, text = 'Memproses...') {
+      const loader = document.getElementById('loading-indicator');
+      const loaderText = document.getElementById('loading-text');
+      if (loaderText) loaderText.textContent = text;
+      if (loader) loader.classList.toggle('hidden', !isLoading);
+    }
+
+    function showMessage(msg, type = 'info') {
+      const banner = document.getElementById('message-banner');
+      if (!banner) return;
+
+      const styles = {
+        error: 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200',
+        success: 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200',
+        info: 'bg-sky-50 dark:bg-sky-950/60 border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200'
+      };
+
+      banner.className = `rounded-2xl p-4 border text-sm no-print ${styles[type] || styles.info}`;
+      banner.textContent = msg;
+      banner.classList.remove('hidden');
+    }
+
+    function hideMessage() {
+      const banner = document.getElementById('message-banner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    // =========================================================================
+    // 9. INISIALISASI EVENT LISTENER SAAT HALAMAN DIMUAT
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLocalDictionary();
+      buildVirtualKeyboard();
+      updateApiKeyUi();
+      updateCacheStats();
+      renderFavoritesList();
+      renderHistoryList();
+
+      // Pulihkan tema & ukuran huruf Arab dari localStorage
+      try {
+        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
+
+        const savedFontSize = localStorage.getItem(STORAGE_KEYS.FONT_SIZE);
+        applyArabicFontSize(savedFontSize || 32);
+      } catch (e) {
+        applyArabicFontSize(32);
+      }
+
+      // Form pencarian
+      document.getElementById('search-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const val = document.getElementById('search-input')?.value || '';
+        runSearch(val);
+      });
+
+      // Bersihkan input
+      document.getElementById('btn-clear-input')?.addEventListener('click', () => {
+        const inp = document.getElementById('search-input');
+        if (inp) {
+          inp.value = '';
+          inp.focus();
+        }
+        hideMessage();
+      });
+
+      // Contoh cepat
+      document.querySelectorAll('.sample-chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const sample = btn.getAttribute('data-sample') || '';
+          const inp = document.getElementById('search-input');
+          if (inp) inp.value = sample;
+          runSearch(sample);
+        });
+      });
+
+      // Toggle keyboard Arab
+      document.getElementById('btn-toggle-keyboard')?.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        const kb = document.getElementById('virtual-keyboard');
+        if (!kb) return;
+        const willOpen = kb.classList.contains('hidden');
+        kb.classList.toggle('hidden', !willOpen);
+        btn.setAttribute('aria-expanded', String(willOpen));
+      });
+
+      // Toggle panel pengaturan API & Tampilan
+      document.getElementById('btn-toggle-settings')?.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        const panel = document.getElementById('settings-panel');
+        if (!panel) return;
+        const willOpen = panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', !willOpen);
+        btn.setAttribute('aria-expanded', String(willOpen));
+      });
+
+      // Simpan & hapus API Key
+      document.getElementById('btn-save-api-key')?.addEventListener('click', () => {
+        const val = document.getElementById('api-key-input')?.value || '';
+        setApiKey(val.trim());
+        updateApiKeyUi();
+        showMessage(
+          val.trim()
+            ? 'Gemini API Key disimpan di localStorage browser Anda.'
+            : 'API Key kosong; aplikasi berjalan menggunakan kamus lokal.',
+          'success'
+        );
+      });
+
+      document.getElementById('btn-clear-api-key')?.addEventListener('click', () => {
+        setApiKey('');
+        const inp = document.getElementById('api-key-input');
+        if (inp) inp.value = '';
+        updateApiKeyUi();
+        showMessage('API Key dihapus dari browser.', 'info');
+      });
+
+      // Pengatur ukuran huruf Arab
+      document.getElementById('font-size-range')?.addEventListener('input', (e) => {
+        applyArabicFontSize(e.target.value);
+      });
+
+      // Bersihkan cache
+      document.getElementById('btn-clear-cache')?.addEventListener('click', clearCache);
+
+      // Mode terang/gelap
+      document.getElementById('btn-theme-toggle')?.addEventListener('click', () => {
+        const isCurrentlyDark = document.documentElement.classList.contains('dark');
+        applyTheme(!isCurrentlyDark);
+      });
+
+      // Tombol aksi hasil: Dengarkan, Favorit, Salin, Cetak
+      document.getElementById('btn-speak')?.addEventListener('click', () => speakArabic(currentSpeakText));
+
+      document.getElementById('btn-favorite')?.addEventListener('click', () => {
+        if (currentAnalysisData?._query) {
+          toggleFavorite(currentAnalysisData._query);
+        }
+      });
+
+      document.getElementById('btn-copy')?.addEventListener('click', copyResultText);
+
+      document.getElementById('btn-print')?.addEventListener('click', () => {
+        window.print();
+      });
+
+      // Hapus semua favorit & riwayat
+      document.getElementById('btn-clear-favorites')?.addEventListener('click', clearFavorites);
+      document.getElementById('btn-clear-history')?.addEventListener('click', clearHistory);
+    });
+  </script>
+</body>
+</html>
